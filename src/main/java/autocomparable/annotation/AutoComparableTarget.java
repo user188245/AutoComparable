@@ -1,16 +1,18 @@
 package autocomparable.annotation;
 
-import java.lang.annotation.ElementType;
-import java.lang.annotation.Retention;
-import java.lang.annotation.RetentionPolicy;
-import java.lang.annotation.Target;
+import java.lang.annotation.*;
 
 @Target({ElementType.FIELD,ElementType.METHOD})
 @Retention(RetentionPolicy.CLASS)
+@Documented
 public @interface AutoComparableTarget{
 
-    int priority() default 0;
+    int priority();
 
     Order order() default Order.ASC;
+
+    boolean isNullValueLowest() default true;
+
+    String alternativeCompareMethod() default "";
 
 }
