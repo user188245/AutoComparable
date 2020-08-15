@@ -1,16 +1,22 @@
 package autocomparable;
 
-import com.sun.source.tree.CompilationUnitTree;
+import java.util.ArrayList;
+import java.util.List;
 
-public class ComparableInjector extends InterfaceInjector {
+public class ComparableInjector extends InterfaceWithGenericTypeInjector {
 
-    public ComparableInjector(AnnotationProcessorTool annotationProcessorTool){
-        super(Comparable.class, annotationProcessorTool);
+    ComparableInjector(List<Class<?>> genericTypes, AnnotationProcessorTool annotationProcessorTool){
+        super(Comparable.class, genericTypes, annotationProcessorTool);
     }
 
+    private List<Class<?>> createGenericTypes(){
+        List<Class<?>> genericTypes = new ArrayList<>(1);
+        genericTypes.add(null); // Self Types
+        return genericTypes;
+    }
 
     @Override
-    public void process(CompilationUnitTree compilationUnit) {
-        //todo
+    protected void processAfterInterfaceInjection() {
+
     }
 }

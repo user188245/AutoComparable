@@ -1,5 +1,9 @@
 package autocomparable;
 
+import com.sun.source.tree.CompilationUnitTree;
+import com.sun.source.tree.ImportTree;
+
+import javax.lang.model.element.TypeElement;
 import java.lang.reflect.Field;
 
 abstract class InterfaceInjector implements CompilationUnitProcessor {
@@ -7,6 +11,7 @@ abstract class InterfaceInjector implements CompilationUnitProcessor {
     private AnnotationProcessorTool annotationProcessorTool;
     private Class<?> inf;
     private Field[] fields;
+    private TypeElement infType;
 
 
     InterfaceInjector(Class<?> inf, AnnotationProcessorTool annotationProcessorTool) throws IllegalArgumentException{
@@ -16,6 +21,7 @@ abstract class InterfaceInjector implements CompilationUnitProcessor {
         }
         this.inf = inf;
         this.fields = inf.getFields();
+        this.infType = annotationProcessorTool.createTypeElement(inf);
     }
 
 
@@ -37,5 +43,21 @@ abstract class InterfaceInjector implements CompilationUnitProcessor {
         return this.fields;
     }
 
+    @Override
+    public void process(CompilationUnitTree compilationUnit) {
+        injectImport(compilationUnit);
+        injectInterface(compilationUnit);
+        processAfterInterfaceInjection();
+    }
 
+    private void injectImport(CompilationUnitTree compilationUnit){
+        ImportTree importTree = annotationProcessorTool.createImport(infType);
+        annotationProcessorTool.injectImport(compilationUnit,importTree);
+    }
+
+    private void injectInterface(CompilationUnitTree compilationUnit){
+        //todo
+    }
+
+    abstract protected void processAfterInterfaceInjection();
 }
