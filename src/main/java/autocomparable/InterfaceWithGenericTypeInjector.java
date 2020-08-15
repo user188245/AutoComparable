@@ -1,12 +1,17 @@
 package autocomparable;
 
+import com.sun.source.tree.ClassTree;
+
+import javax.lang.model.element.TypeElement;
 import java.lang.reflect.TypeVariable;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
 abstract public class InterfaceWithGenericTypeInjector extends InterfaceInjector{
 
     private List<Class<?>> genericTypes;
+    List<TypeElement> genericTypeElements;
     private List<TypeVariable<? extends Class<?>>> genericTypeParameters;
 
     InterfaceWithGenericTypeInjector(Class<?> inf, List<Class<?>> genericTypes, AnnotationProcessorTool annotationProcessorTool) throws IllegalArgumentException {
@@ -17,6 +22,10 @@ abstract public class InterfaceWithGenericTypeInjector extends InterfaceInjector
         }
         genericTypeParameters = Arrays.asList(inf.getTypeParameters());
         this.genericTypes = genericTypes;
+        this.genericTypeElements = new ArrayList<>(genericTypes.size());
+        for(Class<?> cls : genericTypes){
+            genericTypeElements.add(annotationProcessorTool.createTypeElement(cls));
+        }
     }
 
     public List<TypeVariable<? extends Class<?>>> getGenericTypeParameters() {
@@ -31,4 +40,8 @@ abstract public class InterfaceWithGenericTypeInjector extends InterfaceInjector
         this.genericTypes = genericTypes;
     }
 
+    @Override
+    public final void injectInterface(ClassTree classTree) {
+        annotationProcessorTool.injectInterface(classTree, infType, genericTypeElements);
+    }
 }

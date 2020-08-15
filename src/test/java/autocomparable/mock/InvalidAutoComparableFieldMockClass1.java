@@ -27,4 +27,11 @@ public class InvalidAutoComparableFieldMockClass1 {
     public int hashCode() {
         return Arrays.hashCode(field);
     }
+
+    @Override
+    public String toString() {
+        return "InvalidAutoComparableFieldMockClass1{" +
+                "field=" + Arrays.toString(field) +
+                '}';
+    }
 }

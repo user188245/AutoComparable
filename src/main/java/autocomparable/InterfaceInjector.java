@@ -1,5 +1,6 @@
 package autocomparable;
 
+import com.sun.source.tree.ClassTree;
 import com.sun.source.tree.CompilationUnitTree;
 import com.sun.source.tree.ImportTree;
 
@@ -8,10 +9,10 @@ import java.lang.reflect.Field;
 
 abstract class InterfaceInjector implements CompilationUnitProcessor {
 
-    private AnnotationProcessorTool annotationProcessorTool;
+    AnnotationProcessorTool annotationProcessorTool;
     private Class<?> inf;
     private Field[] fields;
-    private TypeElement infType;
+    TypeElement infType;
 
 
     InterfaceInjector(Class<?> inf, AnnotationProcessorTool annotationProcessorTool) throws IllegalArgumentException{
@@ -24,13 +25,6 @@ abstract class InterfaceInjector implements CompilationUnitProcessor {
         this.infType = annotationProcessorTool.createTypeElement(inf);
     }
 
-
-    @Override
-    public AnnotationProcessorTool getAnnotationProcessorTool() {
-        return this.annotationProcessorTool;
-    }
-
-    @Override
     public void setAnnotationProcessorTool(AnnotationProcessorTool annotationProcessorTool) {
         this.annotationProcessorTool = annotationProcessorTool;
     }
@@ -46,8 +40,13 @@ abstract class InterfaceInjector implements CompilationUnitProcessor {
     @Override
     public void process(CompilationUnitTree compilationUnit) {
         injectImport(compilationUnit);
-        injectInterface(compilationUnit);
-        processAfterInterfaceInjection();
+        ClassTree classTree = extractClass(compilationUnit);
+        injectInterface(classTree);
+        processAfterInterfaceInjection(classTree);
+    }
+
+    private ClassTree extractClass(CompilationUnitTree compilationUnit) {
+        return annotationProcessorTool.extractTree(compilationUnit);
     }
 
     private void injectImport(CompilationUnitTree compilationUnit){
@@ -55,9 +54,9 @@ abstract class InterfaceInjector implements CompilationUnitProcessor {
         annotationProcessorTool.injectImport(compilationUnit,importTree);
     }
 
-    private void injectInterface(CompilationUnitTree compilationUnit){
-        //todo
+    protected void injectInterface(ClassTree classTree){
+        annotationProcessorTool.injectInterface(classTree, infType, null);
     }
 
-    abstract protected void processAfterInterfaceInjection();
+    abstract protected void processAfterInterfaceInjection(ClassTree classTree);
 }

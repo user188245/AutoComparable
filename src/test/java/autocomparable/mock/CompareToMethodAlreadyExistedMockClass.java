@@ -6,12 +6,12 @@ import autocomparable.annotation.AutoComparableTarget;
 import java.util.Objects;
 
 @AutoComparable
-public class ComparableImplementedMockClass implements Comparable<ComparableImplementedMockClass> {
+public class CompareToMethodAlreadyExistedMockClass {
 
-    @AutoComparableTarget(priority = 1)
+    @AutoComparableTarget(priority = 300)
     int value;
 
-    ComparableImplementedMockClass(int value) {
+    CompareToMethodAlreadyExistedMockClass(int value) {
         this.value = value;
     }
 
@@ -19,7 +19,7 @@ public class ComparableImplementedMockClass implements Comparable<ComparableImpl
     public boolean equals(Object o) {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
-        ComparableImplementedMockClass that = (ComparableImplementedMockClass) o;
+        CompareToMethodAlreadyExistedMockClass that = (CompareToMethodAlreadyExistedMockClass) o;
         return value == that.value;
     }
 
@@ -28,15 +28,7 @@ public class ComparableImplementedMockClass implements Comparable<ComparableImpl
         return Objects.hash(value);
     }
 
-    @Override
-    public int compareTo(ComparableImplementedMockClass o) {
+    public int compareTo(CompareToMethodAlreadyExistedMockClass o) {
         return Integer.compare(this.value,o.value);
-    }
-
-    @Override
-    public String toString() {
-        return "ComparableImplementedMockClass{" +
-                "value=" + value +
-                '}';
     }
 }

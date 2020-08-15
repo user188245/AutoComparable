@@ -3,6 +3,8 @@ package autocomparable.mock;
 import autocomparable.annotation.AutoComparable;
 import autocomparable.annotation.AutoComparableTarget;
 
+import java.util.Arrays;
+
 @AutoComparable
 public class InvalidAutoComparableTargetParamMockClass2 {
 
@@ -13,5 +15,14 @@ public class InvalidAutoComparableTargetParamMockClass2 {
         return 0;
     }
 
+    @Override
+    public String toString() {
+        return "InvalidAutoComparableTargetParamMockClass2{" +
+                "arrValue=" + Arrays.toString(arrValue) +
+                '}';
+    }
 
+    public InvalidAutoComparableTargetParamMockClass2(int[] arrValue) {
+        this.arrValue = arrValue;
+    }
 }

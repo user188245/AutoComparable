@@ -9,6 +9,6 @@ public @interface AutoComparable {
 
     boolean isLowPriorityFirst() default true;
 
-    boolean generateComparatorGetter() default false;
+//    boolean generateComparatorGetter() default false;
 
 }

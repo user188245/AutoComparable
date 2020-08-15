@@ -14,4 +14,6 @@ public class InvalidAutoComparableFieldMockClass2 {
     public int invalid(int a){
         return a;
     }
+
+
 }

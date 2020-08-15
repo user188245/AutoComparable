@@ -29,4 +29,12 @@ public class AutoComparableTargetMissingMockClass {
     public int hashCode() {
         return Objects.hash(field1, field2);
     }
+
+    @Override
+    public String toString() {
+        return "AutoComparableTargetMissingMockClass{" +
+                "field1=" + field1 +
+                ", field2=" + field2 +
+                '}';
+    }
 }

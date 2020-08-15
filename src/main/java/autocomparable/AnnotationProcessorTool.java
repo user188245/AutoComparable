@@ -1,5 +1,6 @@
 package autocomparable;
 
+import com.sun.source.tree.ClassTree;
 import com.sun.source.tree.CompilationUnitTree;
 import com.sun.source.tree.ImportTree;
 
@@ -12,13 +13,20 @@ public interface AnnotationProcessorTool {
 
     ProcessingEnvironment getProcessingEnvironment();
 
-    TypeElement createTypeElement(Class<?> inf);
+
+    // creation
+
+    TypeElement createTypeElement(Class<?> cls);
 
     ImportTree createImport(TypeElement e);
 
+    // injection
+
     void injectImport(CompilationUnitTree compilationUnitTree, ImportTree importTree);
 
-    void injectInterface(CompilationUnitTree compilationUnitTree, TypeElement infType, List<TypeElement> genericTypes);
+    void injectInterface(ClassTree classTree, TypeElement infType, List<TypeElement> genericTypes);
 
+    // extraction
 
+    ClassTree extractTree(CompilationUnitTree compilationUnit);
 }
