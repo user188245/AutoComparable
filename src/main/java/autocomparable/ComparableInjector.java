@@ -1,14 +1,16 @@
 package autocomparable;
 
 import com.sun.source.tree.ClassTree;
+import com.sun.source.tree.CompilationUnitTree;
+import util.AnnotationProcessorTool;
+import util.InterfaceWithGenericTypeInjector;
 
 import java.util.ArrayList;
 import java.util.List;
 
 public class ComparableInjector extends InterfaceWithGenericTypeInjector {
 
-
-    ComparableInjector(List<Class<?>> genericTypes, AnnotationProcessorTool annotationProcessorTool){
+    public ComparableInjector(AnnotationProcessorTool annotationProcessorTool){
         super(Comparable.class, ComparableInjector.createGenericTypes(), annotationProcessorTool);
     }
 
@@ -19,7 +21,8 @@ public class ComparableInjector extends InterfaceWithGenericTypeInjector {
     }
 
     @Override
-    protected void processAfterInterfaceInjection(ClassTree classTree) {
+    protected CompilationUnitTree processAfterInterfaceInjection(ClassTree classTree) {
         //todo
+        return null;
     }
 }

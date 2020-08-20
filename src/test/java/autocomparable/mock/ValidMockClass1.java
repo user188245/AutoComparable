@@ -4,10 +4,11 @@ import autocomparable.annotation.AutoComparable;
 import autocomparable.annotation.AutoComparableTarget;
 import autocomparable.annotation.Order;
 
+import java.util.Comparator;
 import java.util.Objects;
 
 @AutoComparable
-public class ValidMockClass1{
+public class ValidMockClass1 implements Cloneable{
     @AutoComparableTarget(priority = 1, order = Order.DESC)
     int field1;
 
@@ -41,23 +42,26 @@ public class ValidMockClass1{
                 '}';
     }
 
-    public class ExpectedValidMockClass1 extends ValidMockClass1 implements Comparable<ValidMockClass1>{
-
-        ExpectedValidMockClass1(ValidMockClass1 validMockClass1) {
-            super(validMockClass1.field1, validMockClass1.field2);
-        }
-
-        @Override
-        public int compareTo(ValidMockClass1 o) {
-            int e1 = Integer.compare(o.field1,this.field1);
-            if(e1 == 0){
-                return Long.compare(this.field2,o.field2);
-            }
-            return e1;
-        }
+    public static Comparator<ValidMockClass1> getExpectedComparator() {
+            return new Comparator<ValidMockClass1>() {
+                @Override
+                public int compare(ValidMockClass1 o1, ValidMockClass1 o2) {
+                    return ValidMockClass1.expectedCompare(o1,o2);
+                }
+            };
     }
 
-    public ExpectedValidMockClass1 extract() {
-        return new ExpectedValidMockClass1(this);
+    public static int expectedCompare(ValidMockClass1 o1,ValidMockClass1 o2) {
+        int e1 = Integer.compare(o2.field1,o1.field1);
+        if(e1 == 0){
+            return Long.compare(o1.field2,o2.field2);
+        }
+        return e1;
+    }
+
+
+    @Override
+    protected Object clone() throws CloneNotSupportedException {
+        return new ValidMockClass1(field1,field2);
     }
 }

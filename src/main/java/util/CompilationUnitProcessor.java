@@ -1,9 +1,9 @@
-package autocomparable;
+package util;
 
 import com.sun.source.tree.CompilationUnitTree;
 
 public interface CompilationUnitProcessor {
 
-    void process(CompilationUnitTree compilationUnit);
+    CompilationUnitTree process(CompilationUnitTree compilationUnit);
 
 }

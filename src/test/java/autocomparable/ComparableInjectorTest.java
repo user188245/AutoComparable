@@ -1,31 +1,52 @@
 package autocomparable;
 
+import autocomparable.mock.AutoComparableTargetMissingMockClass;
 import autocomparable.mock.MockClassFactory;
+import autocomparable.mock.ValidMockClass1;
+import com.sun.source.tree.CompilationUnitTree;
 import org.junit.Before;
 import org.junit.Test;
+
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.fail;
 
 public class ComparableInjectorTest {
 
     ComparableInjector comparableInjector;
-    MockClassFactory mockClassFactory;
 
     @Before
     public void before() {
         //todo
+
     }
 
-    @Test
-    public void AutoComparableMissingMockClassTest() {
+    public CompilationUnitTree classToCu(Class<?> cls){
         //todo
+        return null;
     }
+
 
     @Test
     public void AutoComparableTargetMissingMockClassTest() {
-        //todo
+        try{
+            comparableInjector.process(classToCu(AutoComparableTargetMissingMockClass.class));
+            fail();
+        }catch(RuntimeException e2){
+            assertEquals(IllegalArgumentException.class, e2.getClass());
+        }
     }
 
     @Test
     public void ComparableImplementedMockClassTest() {
+        //todo
+    }
+
+    @Test
+    public void CompareToMethodAlreadyExistedMockClassTest() {
         //todo
     }
 
@@ -55,8 +76,30 @@ public class ComparableInjectorTest {
     }
 
     @Test
+    @SuppressWarnings("all")
     public void ValidMockClass1Test() {
-        //todo
+        try{
+            CompilationUnitTree cu = comparableInjector.process(classToCu(ValidMockClass1.class));
+
+            ValidMockClass1 cls= MockClassFactory.generateValidMockClass1();
+
+            List<Comparable> actual = new ArrayList<Comparable>(10);
+            List<ValidMockClass1> expected = new ArrayList<ValidMockClass1>(10);
+
+            for(int i=0; i<10; i++) {
+                cls = MockClassFactory.generateValidMockClass1();
+                if (!(cls instanceof Comparable)) {
+                    fail();
+                }
+                actual.add((Comparable) cls);
+                expected.add(cls);
+            }
+            Collections.sort(actual);
+            Collections.sort(expected,ValidMockClass1.getExpectedComparator());
+            assertEquals(actual, expected);
+        }catch(RuntimeException e2){
+            fail();
+        }
     }
 
     @Test

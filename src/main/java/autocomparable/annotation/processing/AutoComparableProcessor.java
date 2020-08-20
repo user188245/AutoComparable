@@ -2,6 +2,8 @@ package autocomparable.annotation.processing;
 
 import autocomparable.ComparableInjector;
 import autocomparable.annotation.AutoComparable;
+import util.AnnotationProcessorTool;
+import util.AnnotationProcessorToolFactory;
 
 import javax.annotation.processing.AbstractProcessor;
 import javax.annotation.processing.ProcessingEnvironment;
@@ -16,8 +18,9 @@ public class AutoComparableProcessor extends AbstractProcessor {
 
     @Override
     public synchronized void init(ProcessingEnvironment processingEnv) {
-        //todo
         super.init(processingEnv);
+        AnnotationProcessorTool apt = AnnotationProcessorToolFactory.instance(processingEnv);
+        this.comparableInjector = new ComparableInjector(apt);
     }
 
     @Override
@@ -27,9 +30,9 @@ public class AutoComparableProcessor extends AbstractProcessor {
         return supportedAnnotationTypes;
     }
 
+    //todo
     @Override
     public boolean process(Set<? extends TypeElement> annotations, RoundEnvironment roundEnv) {
-        //todo
         return false;
     }
 }

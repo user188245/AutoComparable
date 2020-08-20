@@ -1,4 +1,4 @@
-package autocomparable;
+package util;
 
 import com.sun.source.tree.ClassTree;
 import com.sun.source.tree.CompilationUnitTree;

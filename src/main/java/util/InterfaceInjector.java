@@ -1,4 +1,4 @@
-package autocomparable;
+package util;
 
 import com.sun.source.tree.ClassTree;
 import com.sun.source.tree.CompilationUnitTree;
@@ -7,7 +7,7 @@ import com.sun.source.tree.ImportTree;
 import javax.lang.model.element.TypeElement;
 import java.lang.reflect.Field;
 
-abstract class InterfaceInjector implements CompilationUnitProcessor {
+public abstract class InterfaceInjector implements CompilationUnitProcessor {
 
     AnnotationProcessorTool annotationProcessorTool;
     private Class<?> inf;
@@ -15,7 +15,7 @@ abstract class InterfaceInjector implements CompilationUnitProcessor {
     TypeElement infType;
 
 
-    InterfaceInjector(Class<?> inf, AnnotationProcessorTool annotationProcessorTool) throws IllegalArgumentException{
+    public InterfaceInjector(Class<?> inf, AnnotationProcessorTool annotationProcessorTool) throws IllegalArgumentException{
         setAnnotationProcessorTool(annotationProcessorTool);
         if(!this.inf.isInterface()){
             throw new IllegalArgumentException(inf.getName() + " isn't interface.");
@@ -38,11 +38,11 @@ abstract class InterfaceInjector implements CompilationUnitProcessor {
     }
 
     @Override
-    public void process(CompilationUnitTree compilationUnit) {
+    public CompilationUnitTree process(CompilationUnitTree compilationUnit) {
         injectImport(compilationUnit);
         ClassTree classTree = extractClass(compilationUnit);
         injectInterface(classTree);
-        processAfterInterfaceInjection(classTree);
+        return processAfterInterfaceInjection(classTree);
     }
 
     private ClassTree extractClass(CompilationUnitTree compilationUnit) {
@@ -58,5 +58,5 @@ abstract class InterfaceInjector implements CompilationUnitProcessor {
         annotationProcessorTool.injectInterface(classTree, infType, null);
     }
 
-    abstract protected void processAfterInterfaceInjection(ClassTree classTree);
+    abstract protected CompilationUnitTree processAfterInterfaceInjection(ClassTree classTree);
 }

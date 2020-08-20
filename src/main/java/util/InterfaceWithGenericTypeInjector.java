@@ -1,4 +1,4 @@
-package autocomparable;
+package util;
 
 import com.sun.source.tree.ClassTree;
 
@@ -8,13 +8,13 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
-abstract public class InterfaceWithGenericTypeInjector extends InterfaceInjector{
+public abstract class InterfaceWithGenericTypeInjector extends InterfaceInjector{
 
     private List<Class<?>> genericTypes;
     List<TypeElement> genericTypeElements;
     private List<TypeVariable<? extends Class<?>>> genericTypeParameters;
 
-    InterfaceWithGenericTypeInjector(Class<?> inf, List<Class<?>> genericTypes, AnnotationProcessorTool annotationProcessorTool) throws IllegalArgumentException {
+    public InterfaceWithGenericTypeInjector(Class<?> inf, List<Class<?>> genericTypes, AnnotationProcessorTool annotationProcessorTool) throws IllegalArgumentException {
         super(inf, annotationProcessorTool);
         int countOfGenerics = genericTypes.size();
         if(inf.getTypeParameters().length != countOfGenerics){

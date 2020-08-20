@@ -38,47 +38,47 @@ public class MockClassFactory {
         return result;
     }
 
-    public AutoComparableTargetMissingMockClass generateAutoComparableTargetMissingMockClass(){
+    public static AutoComparableTargetMissingMockClass generateAutoComparableTargetMissingMockClass(){
         return new AutoComparableTargetMissingMockClass(generateInt(),generateLong());
     }
 
-    public ComparableImplementedMockClass generateComparableImplementedMockClass(){
+    public static ComparableImplementedMockClass generateComparableImplementedMockClass(){
         return new ComparableImplementedMockClass(generateInt());
     }
 
-    public CompareToMethodAlreadyExistedMockClass generateCompareToMethodAlreadyExistedMockClass(){
+    public static CompareToMethodAlreadyExistedMockClass generateCompareToMethodAlreadyExistedMockClass(){
         return new CompareToMethodAlreadyExistedMockClass(generateInt());
     }
 
-    public InvalidAutoComparableFieldMockClass1 generateInvalidAutoComparableFieldMockClass1(){
+    public static InvalidAutoComparableFieldMockClass1 generateInvalidAutoComparableFieldMockClass1(){
         return new InvalidAutoComparableFieldMockClass1(generateIntArray(4));
     }
 
-    public InvalidAutoComparableFieldMockClass2 generateInvalidAutoComparableFieldMockClass2(){
+    public static InvalidAutoComparableFieldMockClass2 generateInvalidAutoComparableFieldMockClass2(){
         return new InvalidAutoComparableFieldMockClass2();
     }
 
-    public InvalidAutoComparableTargetParamMockClass1 generateInvalidAutoComparableTargetParamMockClass1(){
+    public static InvalidAutoComparableTargetParamMockClass1 generateInvalidAutoComparableTargetParamMockClass1(){
         return new InvalidAutoComparableTargetParamMockClass1(generateIntArray(4));
     }
 
-    public InvalidAutoComparableTargetParamMockClass2 generateInvalidAutoComparableTargetParamMockClass2(){
+    public static InvalidAutoComparableTargetParamMockClass2 generateInvalidAutoComparableTargetParamMockClass2(){
         return new InvalidAutoComparableTargetParamMockClass2(generateIntArray(4));
     }
 
-    public InvalidAutoComparableTargetParamMockClass3 generateInvalidAutoComparableTargetParamMockClass3(){
+    public static InvalidAutoComparableTargetParamMockClass3 generateInvalidAutoComparableTargetParamMockClass3(){
         return new InvalidAutoComparableTargetParamMockClass3(generateIntArray(4));
     }
 
-    public ValidMockClass1 generateValidMockClass1(){
+    public static ValidMockClass1 generateValidMockClass1(){
         return new ValidMockClass1(generateInt(), generateLong());
     }
 
-    public ValidMockClass2 generateValidMockClass2(){
+    public static ValidMockClass2 generateValidMockClass2(){
         return new ValidMockClass2(generateInt(), generateBoolean(), generateIntList(4));
     }
 
-    public ValidMockClass3 generateValidMockClass3(){
+    public static ValidMockClass3 generateValidMockClass3(){
         return new ValidMockClass3(generateValidMockClass1(), generateMockEnum(), generateInt());
     }
 

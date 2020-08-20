@@ -5,11 +5,12 @@ import autocomparable.annotation.AutoComparableTarget;
 import autocomparable.annotation.Order;
 import jdk.internal.util.ArraysSupport;
 
+import java.util.Comparator;
 import java.util.List;
 import java.util.Objects;
 
 @AutoComparable(isLowPriorityFirst = false)
-public class ValidMockClass2{
+public class ValidMockClass2 implements Cloneable{
     @AutoComparableTarget(priority = 3, order = Order.DESC)
     Integer field1;
 
@@ -25,7 +26,7 @@ public class ValidMockClass2{
         this.field3 = field3;
     }
 
-    public int compare(int[] a, int[] b){
+    public static int compare(int[] a, int[] b){
         if (a == b)
             return 0;
         if (a == null || b == null)
@@ -40,7 +41,7 @@ public class ValidMockClass2{
         return a.length - b.length;
     }
 
-    public int compare(List<Integer> a, List<Integer> b){
+    public static int compare(List<Integer> a, List<Integer> b){
         if (a == b)
             return 0;
         if (a == null || b == null)
@@ -83,35 +84,34 @@ public class ValidMockClass2{
                 '}';
     }
 
-    public class ExpectedValidMockClass2 extends ValidMockClass2 implements Comparable<ValidMockClass2>{
-
-        ExpectedValidMockClass2(ValidMockClass2 validMockClass2) {
-            super(validMockClass2.field1,validMockClass2.field2, validMockClass2.field3);
-        }
-
-        @Override
-        public int compareTo(ValidMockClass2 o) {
-            int e1 = Boolean.compare(o.field2, this.field2);
-            if(e1 == 0){
-                int e2 = Integer.compare(o.field1, this.field1);
-                if( e2 == 0){
-                    int e3 = compare(this.field3,o.field3);
-                    if ( e3 == 0){
-                        return Integer.compare(this.sum(),o.sum());
-                    }
-                    return e3;
-                }
-                return e2;
+    public static Comparator<ValidMockClass2> getExpectedComparator(){
+        return new Comparator<ValidMockClass2>(){
+            @Override
+            public int compare(ValidMockClass2 o1, ValidMockClass2 o2) {
+                return ValidMockClass2.expectedCompare(o1,o2);
             }
-            return e1;
-        }
+        };
     }
 
-    public static int expectedCompare(ValidMockClass1 o1,ValidMockClass1 o2) {
-        int e1 = Integer.compare(o2.field1,o1.field1);
+    private static int expectedCompare(ValidMockClass2 o1, ValidMockClass2 o2) {
+        int e1 = Boolean.compare(o2.field2, o1.field2);
         if(e1 == 0){
-            return Long.compare(o1.field2,o2.field2);
+            int e2 = Integer.compare(o2.field1, o1.field1);
+            if( e2 == 0){
+                int e3 = compare(o1.field3,o2.field3);
+                if ( e3 == 0){
+                    return Integer.compare(o1.sum(),o2.sum());
+                }
+                return e3;
+            }
+            return e2;
         }
         return e1;
+
+    }
+
+    @Override
+    protected Object clone() throws CloneNotSupportedException {
+        return new ValidMockClass2(field1, field2, field3);
     }
 }
