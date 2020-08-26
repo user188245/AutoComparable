@@ -39,8 +39,7 @@ public abstract class InterfaceInjector implements CompilationUnitProcessor {
 
     @Override
     public CompilationUnitTree process(CompilationUnitTree compilationUnit) {
-        injectImport(compilationUnit);
-        ClassTree classTree = extractClass(compilationUnit);
+        ClassTree classTree = injectImportAndGetClass(compilationUnit);
         injectInterface(classTree);
         return processAfterInterfaceInjection(classTree);
     }
@@ -49,9 +48,9 @@ public abstract class InterfaceInjector implements CompilationUnitProcessor {
         return annotationProcessorTool.extractTree(compilationUnit);
     }
 
-    private void injectImport(CompilationUnitTree compilationUnit){
+    private ClassTree injectImportAndGetClass(CompilationUnitTree compilationUnit){
         ImportTree importTree = annotationProcessorTool.createImport(infType);
-        annotationProcessorTool.injectImport(compilationUnit,importTree);
+        return annotationProcessorTool.injectImport(compilationUnit,importTree);
     }
 
     protected void injectInterface(ClassTree classTree){

@@ -3,6 +3,7 @@ package util;
 import com.sun.source.tree.ClassTree;
 import com.sun.source.tree.CompilationUnitTree;
 import com.sun.source.tree.ImportTree;
+import com.sun.source.tree.MethodTree;
 
 import javax.annotation.processing.ProcessingEnvironment;
 import javax.lang.model.element.TypeElement;
@@ -22,9 +23,11 @@ public interface AnnotationProcessorTool {
 
     // injection
 
-    void injectImport(CompilationUnitTree compilationUnitTree, ImportTree importTree);
+    ClassTree injectImport(CompilationUnitTree compilationUnitTree, ImportTree importTree);
 
     void injectInterface(ClassTree classTree, TypeElement infType, List<TypeElement> genericTypes);
+
+    void injectMethod(ClassTree classTree, MethodTree methodTree);
 
     // extraction
 
