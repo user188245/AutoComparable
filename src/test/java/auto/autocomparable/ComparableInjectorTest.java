@@ -6,6 +6,7 @@ import autocomparable.mock.ValidMockClass1;
 import com.sun.source.tree.CompilationUnitTree;
 import org.junit.Before;
 import org.junit.Test;
+import util.AnnotationProcessorToolFactory;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -21,7 +22,7 @@ public class ComparableInjectorTest {
     @Before
     public void before() {
         //todo
-
+        this.comparableInjector = new ComparableInjector(AnnotationProcessorToolFactory.instance(ProcessingEnviromentFactory.build()));
     }
 
     public CompilationUnitTree classToCu(Class<?> cls){

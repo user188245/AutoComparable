@@ -3,15 +3,17 @@ package util;
 import com.sun.source.tree.ClassTree;
 
 import javax.lang.model.element.TypeElement;
+import java.lang.reflect.Type;
 import java.lang.reflect.TypeVariable;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Objects;
 
 public abstract class InterfaceWithGenericTypeInjector extends InterfaceInjector{
 
     private List<Class<?>> genericTypes;
-    List<TypeElement> genericTypeElements;
+    private List<TypeElement> genericTypeElements;
     private List<TypeVariable<? extends Class<?>>> genericTypeParameters;
 
     public InterfaceWithGenericTypeInjector(Class<?> inf, List<Class<?>> genericTypes, AnnotationProcessorTool annotationProcessorTool) throws IllegalArgumentException {
@@ -42,6 +44,13 @@ public abstract class InterfaceWithGenericTypeInjector extends InterfaceInjector
 
     @Override
     public final void injectInterface(ClassTree classTree) {
-        annotationProcessorTool.injectInterface(classTree, infType, genericTypeElements);
+        List<TypeElement> genericsTypeElementsWithSubstitute = createGenericTypeElementsWithSubstitute(genericTypeElements,(TypeElement)classTree);
+        annotationProcessorTool.injectInterface(classTree, infType, genericsTypeElementsWithSubstitute);
+    }
+
+    private static List<TypeElement> createGenericTypeElementsWithSubstitute(List<TypeElement> genericTypeElements, TypeElement substitute){
+        List<TypeElement> result = new ArrayList<>(genericTypeElements.size());
+        genericTypeElements.forEach(x-> result.add(x==null?substitute:x));
+        return result;
     }
 }

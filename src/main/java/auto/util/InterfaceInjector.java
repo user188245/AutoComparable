@@ -17,7 +17,7 @@ public abstract class InterfaceInjector implements CompilationUnitProcessor {
 
     public InterfaceInjector(Class<?> inf, AnnotationProcessorTool annotationProcessorTool) throws IllegalArgumentException{
         setAnnotationProcessorTool(annotationProcessorTool);
-        if(!this.inf.isInterface()){
+        if(!inf.isInterface()){
             throw new IllegalArgumentException(inf.getName() + " isn't interface.");
         }
         this.inf = inf;
@@ -42,10 +42,6 @@ public abstract class InterfaceInjector implements CompilationUnitProcessor {
         ClassTree classTree = injectImportAndGetClass(compilationUnit);
         injectInterface(classTree);
         return processAfterInterfaceInjection(classTree);
-    }
-
-    private ClassTree extractClass(CompilationUnitTree compilationUnit) {
-        return annotationProcessorTool.extractTree(compilationUnit);
     }
 
     private ClassTree injectImportAndGetClass(CompilationUnitTree compilationUnit){
