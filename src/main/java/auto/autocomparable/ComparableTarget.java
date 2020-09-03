@@ -1,28 +1,28 @@
-package autocomparable;
+package auto.autocomparable;
 
-import autocomparable.annotation.Order;
+import auto.autocomparable.annotation.Order;
 import com.sun.source.tree.MethodInvocationTree;
 
 class ComparableTarget implements Comparable<ComparableTarget>{
 
-    enum ComparableTargetType{
+    enum Kind{
         Field,
         Method
     }
 
-    private ComparableTargetType type;
+    private Kind type;
     private int priority;
     private Order order;
     private MethodInvocationTree completedMethodInvocation;
 
-    public ComparableTarget(ComparableTargetType type, int priority, Order order, MethodInvocationTree completedMethodInvocation) {
+    public ComparableTarget(Kind type, int priority, Order order, MethodInvocationTree completedMethodInvocation) {
         this.type = type;
         this.priority = priority;
         this.order = order;
         this.completedMethodInvocation = completedMethodInvocation;
     }
 
-    public ComparableTargetType getType() {
+    public Kind getType() {
         return type;
     }
 

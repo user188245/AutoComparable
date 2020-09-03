@@ -1,15 +1,18 @@
-package util;
+package auto.util;
 
 import com.sun.source.tree.ClassTree;
 import com.sun.source.tree.CompilationUnitTree;
 import com.sun.source.tree.ImportTree;
 
 import javax.lang.model.element.TypeElement;
+import javax.lang.model.type.TypeMirror;
 import java.lang.reflect.Field;
+
+import static javax.lang.model.element.ElementKind.CLASS;
 
 public abstract class InterfaceInjector implements CompilationUnitProcessor {
 
-    AnnotationProcessorTool annotationProcessorTool;
+    protected AnnotationProcessorTool annotationProcessorTool;
     private Class<?> inf;
     private Field[] fields;
     TypeElement infType;
@@ -40,6 +43,10 @@ public abstract class InterfaceInjector implements CompilationUnitProcessor {
     @Override
     public CompilationUnitTree process(CompilationUnitTree compilationUnit) {
         ClassTree classTree = injectImportAndGetClass(compilationUnit);
+        TypeElement te = annotationProcessorTool.extractTypeElement(classTree);
+        if(containsInterfaceDuplication(te)){
+            throw new IllegalArgumentException();
+        }
         injectInterface(classTree);
         return processAfterInterfaceInjection(classTree);
     }
@@ -50,7 +57,21 @@ public abstract class InterfaceInjector implements CompilationUnitProcessor {
     }
 
     protected void injectInterface(ClassTree classTree){
-        annotationProcessorTool.injectInterface(classTree, infType, null);
+        annotationProcessorTool.injectInterface(classTree, infType);
+    }
+
+    protected TypeMirror getInfTypeMirror(TypeElement cls){
+        return infType.asType();
+    }
+
+    protected boolean containsInterfaceDuplication(TypeElement cls){
+        TypeMirror infTypeMirror = getInfTypeMirror(cls);
+        for(TypeMirror tm : cls.getInterfaces()){
+            if(annotationProcessorTool.isSubtype(tm,infTypeMirror)){
+                return true;
+            }
+        }
+        return false;
     }
 
     abstract protected CompilationUnitTree processAfterInterfaceInjection(ClassTree classTree);

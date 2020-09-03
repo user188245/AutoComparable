@@ -1,4 +1,4 @@
-package autocomparable.annotation;
+package auto.autocomparable.annotation;
 
 public enum Order{
     ASC,

@@ -1,4 +1,4 @@
-package util;
+package auto.util;
 
 import com.sun.source.tree.MethodTree;
 

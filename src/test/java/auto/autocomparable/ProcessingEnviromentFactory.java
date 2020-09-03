@@ -1,4 +1,4 @@
-package autocomparable;
+package auto.autocomparable;
 
 import com.sun.tools.javac.processing.JavacProcessingEnvironment;
 import com.sun.tools.javac.util.Context;

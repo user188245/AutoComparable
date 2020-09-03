@@ -1,12 +1,12 @@
-package autocomparable;
+package auto.autocomparable;
 
-import autocomparable.mock.AutoComparableTargetMissingMockClass;
-import autocomparable.mock.MockClassFactory;
-import autocomparable.mock.ValidMockClass1;
+import auto.autocomparable.mock.AutoComparableTargetMissingMockClass;
+import auto.autocomparable.mock.MockClassFactory;
+import auto.autocomparable.mock.ValidMockClass1;
 import com.sun.source.tree.CompilationUnitTree;
 import org.junit.Before;
 import org.junit.Test;
-import util.AnnotationProcessorToolFactory;
+import auto.util.AnnotationProcessorToolFactory;
 
 import java.util.ArrayList;
 import java.util.Collections;

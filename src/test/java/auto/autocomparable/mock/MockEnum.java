@@ -1,4 +1,4 @@
-package autocomparable.mock;
+package auto.autocomparable.mock;
 
 public enum MockEnum {
     first,

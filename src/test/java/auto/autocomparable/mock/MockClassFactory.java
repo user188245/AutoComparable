@@ -1,4 +1,4 @@
-package autocomparable.mock;
+package auto.autocomparable.mock;
 
 import java.util.ArrayList;
 import java.util.List;

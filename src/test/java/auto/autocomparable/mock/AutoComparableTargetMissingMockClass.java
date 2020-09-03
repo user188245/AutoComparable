@@ -1,7 +1,7 @@
-package autocomparable.mock;
+package auto.autocomparable.mock;
 
 
-import autocomparable.annotation.AutoComparable;
+import auto.autocomparable.annotation.AutoComparable;
 
 import java.util.Objects;
 

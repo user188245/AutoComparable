@@ -1,4 +1,4 @@
-package util;
+package auto.util;
 
 import com.sun.source.tree.*;
 import com.sun.source.util.Trees;
@@ -10,7 +10,9 @@ import com.sun.tools.javac.tree.TreeMaker;
 
 import javax.annotation.processing.ProcessingEnvironment;
 import javax.lang.model.element.TypeElement;
+import javax.lang.model.type.TypeMirror;
 import javax.lang.model.util.Elements;
+import javax.lang.model.util.Types;
 import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
@@ -23,11 +25,13 @@ class AnnotationProcessorToolImpl implements AnnotationProcessorTool {
 
     private ProcessingEnvironment processingEnv;
     private Elements elements;
+    private Types types;
     private TreeMaker treeMaker;
 
     AnnotationProcessorToolImpl(ProcessingEnvironment processingEnv) {
         this.processingEnv = processingEnv;
         this.elements = processingEnv.getElementUtils();
+        this.types = processingEnv.getTypeUtils();
         if(!(processingEnv instanceof JavacProcessingEnvironment)){
             throw new IllegalArgumentException();
         }
@@ -51,6 +55,11 @@ class AnnotationProcessorToolImpl implements AnnotationProcessorTool {
         }
         ClassSymbol classSymbol = (ClassSymbol)e;
         return treeMaker.Import(treeMaker.QualIdent(classSymbol),false);
+    }
+
+    @Override
+    public boolean isSubtype(TypeMirror t1, TypeMirror t2) {
+        return types.isSubtype(t1,t2);
     }
 
     @Override
@@ -90,15 +99,7 @@ class AnnotationProcessorToolImpl implements AnnotationProcessorTool {
         return jcClassDecl;
     }
 
-    @Override
-    public void injectInterface(ClassTree classTree, TypeElement infType, List<TypeElement> genericTypes) {
-        if(!(classTree instanceof JCClassDecl)){
-            throw new IllegalArgumentException();
-        }
-        injectInterface((JCClassDecl)classTree,infType,genericTypes);
-    }
-
-    private void injectInterface(JCClassDecl jcClassDecl, TypeElement infType, List<TypeElement> genericTypes){
+    private JCExpression createIdentWithGenerics(TypeElement infType, List<TypeElement> genericTypes) {
         JCExpression implementsUnit = createIdent(infType);
         Symbol sym = ((JCIdent)implementsUnit).sym;
         if(!(sym.getTypeParameters().isEmpty())){
@@ -108,8 +109,33 @@ class AnnotationProcessorToolImpl implements AnnotationProcessorTool {
             }
             implementsUnit = treeMaker.TypeApply(implementsUnit,com.sun.tools.javac.util.List.from(list));
         }
-        com.sun.tools.javac.util.List<JCTree.JCExpression> listImplementing = jcClassDecl.implementing.append(implementsUnit);
+        return implementsUnit;
+    }
 
+    @Override
+    public void injectInterface(ClassTree classTree, TypeElement infType) {
+        injectInterface(classTree,infType, null);
+    }
+
+    @Override
+    public void injectInterface(ClassTree classTree, TypeElement infType, List<TypeElement> genericTypes) {
+        if(!(classTree instanceof JCClassDecl)){
+            throw new IllegalArgumentException();
+        }
+        injectInterface((JCClassDecl)classTree,infType, genericTypes);
+    }
+
+    private void injectInterface(JCClassDecl jcClassDecl, TypeElement infType, List<TypeElement> genericTypes){
+        JCExpression implementsUnit = createIdentWithGenerics(infType,genericTypes);
+        com.sun.tools.javac.util.List<JCTree.JCExpression> listImplementing = jcClassDecl.implementing.append(implementsUnit);
+        Symbol sym;
+        if(implementsUnit instanceof JCIdent){
+            sym = ((JCIdent)implementsUnit).sym;
+        }else if(implementsUnit instanceof JCTypeApply){
+            sym = ((JCIdent)(((JCTypeApply)implementsUnit).clazz)).sym;
+        }else{
+            throw new IllegalArgumentException();
+        }
         jcClassDecl.implementing = null;
         jcClassDecl.implementing = listImplementing;
         com.sun.tools.javac.util.List<Type> listInterfacesField = jcClassDecl.sym.getInterfaces().append(sym.asType());
@@ -146,4 +172,22 @@ class AnnotationProcessorToolImpl implements AnnotationProcessorTool {
         }
         return (ClassTree)tree;
     }
+
+    @Override
+    public TypeElement extractTypeElement(ClassTree classTree) {
+        if(!(classTree instanceof JCClassDecl)){
+            throw new IllegalArgumentException();
+        }
+        return ((JCClassDecl)classTree).sym;
+    }
+
+    @Override
+    public TypeMirror createGenericTypeMirror(TypeMirror prototype, List<TypeMirror> genericTypes) {
+        Type.ClassType type = (Type.ClassType) prototype;
+        Type.ClassType newType = type.cloneWithMetadata(type.getMetadata());
+        newType.typarams_field = com.sun.tools.javac.util.List.convert(Type.class,com.sun.tools.javac.util.List.from(genericTypes));
+        newType.allparams_field = newType.typarams_field;
+        return newType;
+    }
+
 }

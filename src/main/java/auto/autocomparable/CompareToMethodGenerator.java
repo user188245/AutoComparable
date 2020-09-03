@@ -1,9 +1,9 @@
-package autocomparable;
+package auto.autocomparable;
 
-import autocomparable.annotation.Order;
+import auto.autocomparable.annotation.Order;
 import com.sun.source.tree.MethodTree;
-import util.AnnotationProcessorTool;
-import util.MethodGenerator;
+import auto.util.AnnotationProcessorTool;
+import auto.util.MethodGenerator;
 
 import java.util.List;
 
@@ -24,4 +24,6 @@ class CompareToMethodGenerator implements MethodGenerator {
 
         return null;
     }
+
+
 }

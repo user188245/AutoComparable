@@ -1,4 +1,4 @@
-package autocomparable.annotation;
+package auto.autocomparable.annotation;
 
 import java.lang.annotation.*;
 

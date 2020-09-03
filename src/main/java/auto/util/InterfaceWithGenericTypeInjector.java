@@ -1,14 +1,14 @@
-package util;
+package auto.util;
 
 import com.sun.source.tree.ClassTree;
 
 import javax.lang.model.element.TypeElement;
-import java.lang.reflect.Type;
+import javax.lang.model.type.TypeMirror;
 import java.lang.reflect.TypeVariable;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.LinkedList;
 import java.util.List;
-import java.util.Objects;
 
 public abstract class InterfaceWithGenericTypeInjector extends InterfaceInjector{
 
@@ -26,7 +26,11 @@ public abstract class InterfaceWithGenericTypeInjector extends InterfaceInjector
         this.genericTypes = genericTypes;
         this.genericTypeElements = new ArrayList<>(genericTypes.size());
         for(Class<?> cls : genericTypes){
-            genericTypeElements.add(annotationProcessorTool.createTypeElement(cls));
+            if(cls != null) {
+                genericTypeElements.add(annotationProcessorTool.createTypeElement(cls));
+            }else{
+                genericTypeElements.add(null);
+            }
         }
     }
 
@@ -43,8 +47,17 @@ public abstract class InterfaceWithGenericTypeInjector extends InterfaceInjector
     }
 
     @Override
+    protected TypeMirror getInfTypeMirror(TypeElement cls) {
+        TypeMirror typeMirror = infType.asType();
+        List<TypeElement> genericsTypeElementsWithSubstitute = createGenericTypeElementsWithSubstitute(genericTypeElements,cls);
+        List<TypeMirror> genericsTypeMirrors = new LinkedList<>();
+        genericsTypeElementsWithSubstitute.forEach(x->genericsTypeMirrors.add(x.asType()));
+        return annotationProcessorTool.createGenericTypeMirror(typeMirror,genericsTypeMirrors);
+    }
+
+    @Override
     public final void injectInterface(ClassTree classTree) {
-        List<TypeElement> genericsTypeElementsWithSubstitute = createGenericTypeElementsWithSubstitute(genericTypeElements,(TypeElement)classTree);
+        List<TypeElement> genericsTypeElementsWithSubstitute = createGenericTypeElementsWithSubstitute(genericTypeElements,annotationProcessorTool.extractTypeElement(classTree));
         annotationProcessorTool.injectInterface(classTree, infType, genericsTypeElementsWithSubstitute);
     }
 
