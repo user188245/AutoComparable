@@ -19,7 +19,12 @@ public interface AnnotationProcessorTool {
 
     ImportTree createImport(TypeElement e);
 
+    TypeMirror createGenericTypeMirror(TypeMirror prototype, List<TypeMirror> genericsTypes);
+
+
     //verify
+
+    boolean isSameType(TypeMirror t1, TypeMirror t2);
 
     boolean isSubtype(TypeMirror t1, TypeMirror t2);
 
@@ -33,11 +38,15 @@ public interface AnnotationProcessorTool {
 
     void injectMethod(ClassTree classTree, MethodTree methodTree);
 
+    void injectFieldAccessRight(MemberSelectTree memberSelectTree, String param);
+
+    void injectFieldAccessLeft(MemberSelectTree memberSelectTree, String param);
+
     // extraction
 
     ClassTree extractTree(CompilationUnitTree compilationUnit);
 
     TypeElement extractTypeElement(ClassTree classTree);
 
-    TypeMirror createGenericTypeMirror(TypeMirror prototype, List<TypeMirror> genericsTypes);
+    ExpressionTree extractMemberSelect(String fullPath);
 }

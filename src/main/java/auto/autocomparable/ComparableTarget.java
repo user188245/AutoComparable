@@ -1,7 +1,7 @@
 package auto.autocomparable;
 
 import auto.autocomparable.annotation.Order;
-import com.sun.source.tree.MethodInvocationTree;
+import com.sun.source.tree.ExpressionTree;
 
 class ComparableTarget implements Comparable<ComparableTarget>{
 
@@ -10,32 +10,25 @@ class ComparableTarget implements Comparable<ComparableTarget>{
         Method
     }
 
-    private Kind type;
+    enum MethodType{
+        CompareTo,
+        Compare
+    }
+
+    private Kind kind;
+    private MethodType methodType;
     private int priority;
     private Order order;
-    private MethodInvocationTree completedMethodInvocation;
+    private ExpressionTree compareTarget;
+    private ExpressionTree compareMethod;
 
-    public ComparableTarget(Kind type, int priority, Order order, MethodInvocationTree completedMethodInvocation) {
-        this.type = type;
+    ComparableTarget(Kind kind, MethodType methodType, int priority, Order order, ExpressionTree compareTarget, ExpressionTree compareMethod) {
+        this.kind = kind;
+        this.methodType = methodType;
         this.priority = priority;
         this.order = order;
-        this.completedMethodInvocation = completedMethodInvocation;
-    }
-
-    public Kind getType() {
-        return type;
-    }
-
-    public int getPriority() {
-        return priority;
-    }
-
-    public Order getOrder() {
-        return order;
-    }
-
-    public MethodInvocationTree getCompletedMethodInvocation() {
-        return completedMethodInvocation;
+        this.compareTarget = compareTarget;
+        this.compareMethod = compareMethod;
     }
 
     @Override

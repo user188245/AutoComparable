@@ -48,7 +48,8 @@ public abstract class InterfaceInjector implements CompilationUnitProcessor {
             throw new IllegalArgumentException();
         }
         injectInterface(classTree);
-        return processAfterInterfaceInjection(classTree);
+        processAfterInterfaceInjection(classTree);
+        return compilationUnit;
     }
 
     private ClassTree injectImportAndGetClass(CompilationUnitTree compilationUnit){
@@ -74,5 +75,5 @@ public abstract class InterfaceInjector implements CompilationUnitProcessor {
         return false;
     }
 
-    abstract protected CompilationUnitTree processAfterInterfaceInjection(ClassTree classTree);
+    abstract protected void processAfterInterfaceInjection(ClassTree classTree);
 }

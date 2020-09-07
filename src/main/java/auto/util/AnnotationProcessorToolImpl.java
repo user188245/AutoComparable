@@ -1,12 +1,14 @@
 package auto.util;
 
 import com.sun.source.tree.*;
-import com.sun.source.util.Trees;
 import com.sun.tools.javac.code.Symbol;
 import com.sun.tools.javac.code.Type;
 import com.sun.tools.javac.processing.JavacProcessingEnvironment;
 import com.sun.tools.javac.tree.JCTree;
 import com.sun.tools.javac.tree.TreeMaker;
+import com.sun.tools.javac.util.Context;
+import com.sun.tools.javac.util.Name;
+import com.sun.tools.javac.util.Names;
 
 import javax.annotation.processing.ProcessingEnvironment;
 import javax.lang.model.element.TypeElement;
@@ -27,6 +29,7 @@ class AnnotationProcessorToolImpl implements AnnotationProcessorTool {
     private Elements elements;
     private Types types;
     private TreeMaker treeMaker;
+    private Names names;
 
     AnnotationProcessorToolImpl(ProcessingEnvironment processingEnv) {
         this.processingEnv = processingEnv;
@@ -35,7 +38,9 @@ class AnnotationProcessorToolImpl implements AnnotationProcessorTool {
         if(!(processingEnv instanceof JavacProcessingEnvironment)){
             throw new IllegalArgumentException();
         }
-        this.treeMaker = TreeMaker.instance(((JavacProcessingEnvironment) processingEnv).getContext());
+        Context cxt = ((JavacProcessingEnvironment) processingEnv).getContext();
+        this.treeMaker = TreeMaker.instance(cxt);
+        this.names = Names.instance(cxt);
     }
 
     @Override
@@ -55,6 +60,20 @@ class AnnotationProcessorToolImpl implements AnnotationProcessorTool {
         }
         ClassSymbol classSymbol = (ClassSymbol)e;
         return treeMaker.Import(treeMaker.QualIdent(classSymbol),false);
+    }
+
+    @Override
+    public TypeMirror createGenericTypeMirror(TypeMirror prototype, List<TypeMirror> genericTypes) {
+        Type.ClassType type = (Type.ClassType) prototype;
+        Type.ClassType newType = type.cloneWithMetadata(type.getMetadata());
+        newType.typarams_field = com.sun.tools.javac.util.List.convert(Type.class,com.sun.tools.javac.util.List.from(genericTypes));
+        newType.allparams_field = newType.typarams_field;
+        return newType;
+    }
+
+    @Override
+    public boolean isSameType(TypeMirror t1, TypeMirror t2) {
+        return types.isSameType(t1,t2);
     }
 
     @Override
@@ -164,6 +183,38 @@ class AnnotationProcessorToolImpl implements AnnotationProcessorTool {
     }
 
     @Override
+    public void injectFieldAccessRight(MemberSelectTree memberSelectTree, String param) {
+        if(!(memberSelectTree instanceof JCExpression)){
+            throw new IllegalArgumentException();
+        }
+        JCExpression member = (JCExpression)memberSelectTree;
+        for(String s : param.split(".")) {
+            member = treeMaker.Select(member, name(s));
+        }
+    }
+
+    @Override
+    public void injectFieldAccessLeft(MemberSelectTree memberSelectTree, String param) {
+        JCExpression expressionTree = (JCExpression)extractMemberSelect(param);
+        LinkedList<Name> list = new LinkedList<>();
+
+        while(true){
+            list.addLast(name(memberSelectTree.getIdentifier().toString()));
+            ExpressionTree et = memberSelectTree.getExpression();
+            if(et instanceof MemberSelectTree){
+                memberSelectTree = (MemberSelectTree) et;
+            }else if(et instanceof IdentifierTree){
+                break;
+            }else{
+                throw new IllegalArgumentException();
+            }
+        }
+        for(Name name : list){
+            expressionTree = treeMaker.Select(expressionTree, name);
+        }
+    }
+
+    @Override
     public ClassTree extractTree(CompilationUnitTree compilationUnit) {
         List<? extends Tree> list = compilationUnit.getTypeDecls();
         Tree tree = list.get(list.size()-1);
@@ -182,12 +233,18 @@ class AnnotationProcessorToolImpl implements AnnotationProcessorTool {
     }
 
     @Override
-    public TypeMirror createGenericTypeMirror(TypeMirror prototype, List<TypeMirror> genericTypes) {
-        Type.ClassType type = (Type.ClassType) prototype;
-        Type.ClassType newType = type.cloneWithMetadata(type.getMetadata());
-        newType.typarams_field = com.sun.tools.javac.util.List.convert(Type.class,com.sun.tools.javac.util.List.from(genericTypes));
-        newType.allparams_field = newType.typarams_field;
-        return newType;
+    public ExpressionTree extractMemberSelect(String fullPath) {
+        String[] stringSplitAsDelimiter = fullPath.split(".");
+        JCExpression member = treeMaker.Ident(name(stringSplitAsDelimiter[0]));
+        for(int i=1; i<stringSplitAsDelimiter.length; i++){
+            member = treeMaker.Select(member,name(stringSplitAsDelimiter[i]));
+        }
+        return member;
     }
+
+    private Name name(String s){
+        return names.fromString(s);
+    }
+
 
 }

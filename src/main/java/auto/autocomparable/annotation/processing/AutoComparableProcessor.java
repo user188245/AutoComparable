@@ -39,6 +39,7 @@ public class AutoComparableProcessor extends AbstractProcessor {
     }
 
     //todo
+    // if necessary, build hierarchical dependency tree in order to compile the class with @AutoComparable depended by other @AutoComparable class first.
     @Override
     public boolean process(Set<? extends TypeElement> annotations, RoundEnvironment roundEnv) {
         for(Element e : roundEnv.getElementsAnnotatedWith(AutoComparable.class)){
