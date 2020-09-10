@@ -11,8 +11,6 @@ public @interface AutoComparableTarget{
 
     Order order() default Order.ASC;
 
-    boolean isNullValueLowest() default true;
-
     String alternativeCompareMethod() default "";
 
 }

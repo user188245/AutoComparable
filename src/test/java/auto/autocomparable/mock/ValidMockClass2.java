@@ -107,7 +107,6 @@ public class ValidMockClass2 implements Cloneable{
             return e2;
         }
         return e1;
-
     }
 
     @Override

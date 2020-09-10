@@ -1,8 +1,10 @@
 package auto.util;
 
 import com.sun.source.tree.*;
+import com.sun.tools.javac.code.Flags;
 import com.sun.tools.javac.code.Symbol;
 import com.sun.tools.javac.code.Type;
+import com.sun.tools.javac.code.TypeTag;
 import com.sun.tools.javac.processing.JavacProcessingEnvironment;
 import com.sun.tools.javac.tree.JCTree;
 import com.sun.tools.javac.tree.TreeMaker;
@@ -11,13 +13,13 @@ import com.sun.tools.javac.util.Name;
 import com.sun.tools.javac.util.Names;
 
 import javax.annotation.processing.ProcessingEnvironment;
-import javax.lang.model.element.TypeElement;
+import javax.lang.model.element.*;
+import javax.lang.model.type.TypeKind;
 import javax.lang.model.type.TypeMirror;
 import javax.lang.model.util.Elements;
 import javax.lang.model.util.Types;
-import java.util.ArrayList;
-import java.util.LinkedList;
-import java.util.List;
+import java.lang.annotation.Annotation;
+import java.util.*;
 
 import static com.sun.tools.javac.code.Symbol.ClassSymbol;
 import static com.sun.tools.javac.tree.JCTree.*;
@@ -54,12 +56,105 @@ class AnnotationProcessorToolImpl implements AnnotationProcessorTool {
     }
 
     @Override
+    public VariableElement createVariableElement(Set<Modifier> modifiers, TypeMirror varType, String varName, TypeElement from) {
+        return new Symbol.VarSymbol(getModifierFlag(modifiers),name(varName),(Type)varType,(Symbol)from);
+    }
+
+    @Override
     public ImportTree createImport(TypeElement e) {
-        if(!(e instanceof ClassSymbol)){
-            throw new IllegalArgumentException();
-        }
         ClassSymbol classSymbol = (ClassSymbol)e;
         return treeMaker.Import(treeMaker.QualIdent(classSymbol),false);
+    }
+
+    @Override
+    public ModifiersTree createModifier(List<AnnotationTree> annotations, Set<Modifier> modifiers) {
+        return treeMaker.Modifiers(getModifierFlag(modifiers), com.sun.tools.javac.util.List.convert(JCAnnotation.class, com.sun.tools.javac.util.List.from(annotations)));
+    }
+
+    @Override
+    public VariableTree createVariable(Set<Modifier> modifiers, TypeMirror type, String name, ExpressionTree init, Element from) {
+        Symbol.VarSymbol varSymbol = new Symbol.VarSymbol(getModifierFlag(modifiers),name(name),(Type)type,(Symbol)from);
+        return treeMaker.VarDef(varSymbol, (JCExpression)init);
+    }
+
+    @Override
+    public MethodInvocationTree createMethodInvocation(ExpressionTree methodExpr, List<ExpressionTree> args) {
+        com.sun.tools.javac.util.List<JCExpression> expr = null;
+        if(args != null){
+            expr = com.sun.tools.javac.util.List.convert(JCExpression.class, com.sun.tools.javac.util.List.from(args));
+        }
+        return treeMaker.App((JCExpression)methodExpr, expr);
+    }
+
+    @Override
+    public ReturnTree createReturn(ExpressionTree expr) {
+        return treeMaker.Return((JCExpression) expr);
+    }
+
+    @Override
+    public IfTree createIf(ExpressionTree condExpr, StatementTree thenExpr, StatementTree elseExpr) {
+        return treeMaker.If((JCExpression)condExpr, (JCStatement) thenExpr, (JCStatement)elseExpr);
+    }
+
+    private Tag toTag(BinaryOperator binaryOperator){
+        switch(binaryOperator){
+            case EQ:
+                return Tag.EQ;
+            case GE:
+                return Tag.GE;
+            case GT:
+                return Tag.GT;
+            case LE:
+                return Tag.LE;
+            case LT:
+                return Tag.LT;
+            case NE:
+                return Tag.NE;
+            case OR:
+                return Tag.OR;
+            case SL:
+                return Tag.SL;
+            case SR:
+                return Tag.SR;
+            case AND:
+                return Tag.AND;
+            case DIV:
+                return Tag.DIV;
+            case MOD:
+                return Tag.MOD;
+            case MUL:
+                return Tag.MUL;
+            case USR:
+                return Tag.USR;
+            case PLUS:
+                return Tag.PLUS;
+            case BITOR:
+                return Tag.BITOR;
+            case MINUS:
+                return Tag.MINUS;
+            case BITAND:
+                return Tag.BITAND;
+            case BITXOR:
+                return Tag.BITXOR;
+            default:
+                return null;
+        }
+    };
+
+    @Override
+    public BinaryTree createBinaryOperation(ExpressionTree leftExpr, ExpressionTree rightExpr, BinaryOperator binaryOperator) {
+        return treeMaker.Binary(toTag(binaryOperator), (JCExpression)leftExpr, (JCExpression)rightExpr);
+    }
+
+    @Override
+    public TypeMirror createPrimitiveType(TypeKind kind) {
+        return types.getPrimitiveType(kind);
+    }
+
+    //todo
+    @Override
+    public <A extends Annotation> AnnotationTree createAnnotation(A annotation) {
+        return null;
     }
 
     @Override
@@ -69,6 +164,119 @@ class AnnotationProcessorToolImpl implements AnnotationProcessorTool {
         newType.typarams_field = com.sun.tools.javac.util.List.convert(Type.class,com.sun.tools.javac.util.List.from(genericTypes));
         newType.allparams_field = newType.typarams_field;
         return newType;
+    }
+
+    @Override
+    public MethodTree createMethod(List<AnnotationTree> annotations, ExecutableElement method, BlockTree block) {
+        JCTree.JCMethodDecl jcMethodDecl = treeMaker.MethodDef((Symbol.MethodSymbol)method,(JCBlock)block);
+        jcMethodDecl.mods = (JCModifiers)createModifier(annotations, method.getModifiers());
+        return jcMethodDecl;
+    }
+
+    //todo
+    @Override
+    public ExecutableElement createMethodPrototype(Set<Modifier> modifiers, String name, TypeMirror returnType, List<VariableElement> params, List<TypeMirror> thrown, TypeElement from) {
+        List<TypeMirror> paramTypes = new LinkedList<>();
+        for(VariableElement ve : params){
+            paramTypes.add(ve.asType());
+        }
+        com.sun.tools.javac.util.List<Type> tParams = com.sun.tools.javac.util.List.convert(Type.class, com.sun.tools.javac.util.List.from(paramTypes));
+        com.sun.tools.javac.util.List<Type> tThrown;
+        if(thrown != null){
+            tThrown = com.sun.tools.javac.util.List.convert(Type.class, com.sun.tools.javac.util.List.from(thrown));
+        }else{
+            tThrown = com.sun.tools.javac.util.List.nil();
+        }
+        Type.MethodType methodType = new Type.MethodType(
+                tParams,
+                (Type)returnType,
+                tThrown,
+                null
+        );
+        Symbol.MethodSymbol method = new Symbol.MethodSymbol(
+                getModifierFlag(modifiers),
+                name(name),
+                methodType,
+                (ClassSymbol)from);
+        method.params = com.sun.tools.javac.util.List.convert(Symbol.VarSymbol.class, com.sun.tools.javac.util.List.from(params));
+        return method;
+    }
+
+    @Override
+    public BlockTree createBlock(Set<Modifier> modifiers, List<StatementTree> statements) {
+        if(statements == null){
+            throw new IllegalArgumentException();
+        }
+        return treeMaker.Block(getModifierFlag(modifiers),com.sun.tools.javac.util.List.convert(JCStatement.class, com.sun.tools.javac.util.List.from(statements)));
+    }
+
+    @Override
+    public ExpressionTree createMemberSelect(String fullPath) {
+        String[] stringSplitAsDelimiter = fullPath.split("\\.");
+        JCExpression member = treeMaker.Ident(name(stringSplitAsDelimiter[0]));
+        for(int i=1; i<stringSplitAsDelimiter.length; i++){
+            member = treeMaker.Select(member,name(stringSplitAsDelimiter[i]));
+        }
+        return member;
+    }
+
+    @Override
+    public AssignmentTree createAssignment(ExpressionTree target, ExpressionTree value) {
+        return null;
+    }
+
+    @Override
+    public LiteralTree createLiteral(Object obj) {
+        return treeMaker.Literal(obj);
+    }
+
+
+    private long getModifierFlag(Set<Modifier> modifiers){
+        long result = 0;
+        if(modifiers == null){
+            return result;
+        }
+        for(Modifier m : modifiers){
+            switch(m){
+                case ABSTRACT:
+                    result |= Flags.ABSTRACT;
+                    break;
+                case DEFAULT:
+                    result |= Flags.DEFAULT;
+                    break;
+                case FINAL:
+                    result |= Flags.FINAL;
+                    break;
+                case NATIVE:
+                    result |= Flags.NATIVE;
+                    break;
+                case PRIVATE:
+                    result |= Flags.PRIVATE;
+                    break;
+                case PROTECTED:
+                    result |= Flags.PROTECTED;
+                    break;
+                case PUBLIC:
+                    result |= Flags.PUBLIC;
+                    break;
+                case STATIC:
+                    result |= Flags.STATIC;
+                    break;
+                case STRICTFP:
+                    result |= Flags.STRICTFP;
+                    break;
+                case SYNCHRONIZED:
+                    result |= Flags.SYNCHRONIZED;
+                    break;
+                case TRANSIENT:
+                    result |= Flags.TRANSIENT;
+                    break;
+                case VOLATILE:
+                    result |= Flags.VOLATILE;
+                    break;
+            }
+        }
+        return result;
     }
 
     @Override
@@ -83,12 +291,6 @@ class AnnotationProcessorToolImpl implements AnnotationProcessorTool {
 
     @Override
     public ClassTree injectImport(CompilationUnitTree compilationUnitTree, ImportTree importTree) {
-        if(!(compilationUnitTree instanceof JCCompilationUnit)){
-            throw new IllegalArgumentException();
-        }
-        if(!(importTree instanceof JCImport)){
-            throw new IllegalArgumentException();
-        }
         JCCompilationUnit jcCompilationUnit = (JCCompilationUnit)compilationUnitTree;
         LinkedList<JCTree> defsTmp = new LinkedList<>();
 
@@ -138,9 +340,6 @@ class AnnotationProcessorToolImpl implements AnnotationProcessorTool {
 
     @Override
     public void injectInterface(ClassTree classTree, TypeElement infType, List<TypeElement> genericTypes) {
-        if(!(classTree instanceof JCClassDecl)){
-            throw new IllegalArgumentException();
-        }
         injectInterface((JCClassDecl)classTree,infType, genericTypes);
     }
 
@@ -164,87 +363,29 @@ class AnnotationProcessorToolImpl implements AnnotationProcessorTool {
     }
 
     private JCExpression createIdent(TypeElement te){
-        if(!(te instanceof ClassSymbol)){
-            throw new IllegalArgumentException();
-        }
         return treeMaker.Ident((Symbol)te);
     }
 
     @Override
     public void injectMethod(ClassTree classTree, MethodTree methodTree) {
-        if(!(classTree instanceof JCClassDecl)){
-            throw new IllegalArgumentException();
-        }
-        if(!(methodTree instanceof JCMethodDecl)){
-            throw new IllegalArgumentException();
-        }
         JCClassDecl jcClassDecl = (JCClassDecl) classTree;
         jcClassDecl.defs = jcClassDecl.defs.append((JCTree) methodTree);
-    }
-
-    @Override
-    public void injectFieldAccessRight(MemberSelectTree memberSelectTree, String param) {
-        if(!(memberSelectTree instanceof JCExpression)){
-            throw new IllegalArgumentException();
-        }
-        JCExpression member = (JCExpression)memberSelectTree;
-        for(String s : param.split(".")) {
-            member = treeMaker.Select(member, name(s));
-        }
-    }
-
-    @Override
-    public void injectFieldAccessLeft(MemberSelectTree memberSelectTree, String param) {
-        JCExpression expressionTree = (JCExpression)extractMemberSelect(param);
-        LinkedList<Name> list = new LinkedList<>();
-
-        while(true){
-            list.addLast(name(memberSelectTree.getIdentifier().toString()));
-            ExpressionTree et = memberSelectTree.getExpression();
-            if(et instanceof MemberSelectTree){
-                memberSelectTree = (MemberSelectTree) et;
-            }else if(et instanceof IdentifierTree){
-                break;
-            }else{
-                throw new IllegalArgumentException();
-            }
-        }
-        for(Name name : list){
-            expressionTree = treeMaker.Select(expressionTree, name);
-        }
     }
 
     @Override
     public ClassTree extractTree(CompilationUnitTree compilationUnit) {
         List<? extends Tree> list = compilationUnit.getTypeDecls();
         Tree tree = list.get(list.size()-1);
-        if(!(tree instanceof ClassTree)){
-            throw new IllegalArgumentException();
-        }
         return (ClassTree)tree;
     }
 
     @Override
     public TypeElement extractTypeElement(ClassTree classTree) {
-        if(!(classTree instanceof JCClassDecl)){
-            throw new IllegalArgumentException();
-        }
         return ((JCClassDecl)classTree).sym;
-    }
-
-    @Override
-    public ExpressionTree extractMemberSelect(String fullPath) {
-        String[] stringSplitAsDelimiter = fullPath.split(".");
-        JCExpression member = treeMaker.Ident(name(stringSplitAsDelimiter[0]));
-        for(int i=1; i<stringSplitAsDelimiter.length; i++){
-            member = treeMaker.Select(member,name(stringSplitAsDelimiter[i]));
-        }
-        return member;
     }
 
     private Name name(String s){
         return names.fromString(s);
     }
-
 
 }

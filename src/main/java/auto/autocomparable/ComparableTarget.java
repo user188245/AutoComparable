@@ -19,10 +19,30 @@ class ComparableTarget implements Comparable<ComparableTarget>{
     private MethodType methodType;
     private int priority;
     private Order order;
-    private ExpressionTree compareTarget;
-    private ExpressionTree compareMethod;
+    private String compareTarget;
+    private String compareMethod;
 
-    ComparableTarget(Kind kind, MethodType methodType, int priority, Order order, ExpressionTree compareTarget, ExpressionTree compareMethod) {
+    Kind getKind() {
+        return kind;
+    }
+
+    MethodType getMethodType() {
+        return methodType;
+    }
+
+    Order getOrder() {
+        return order;
+    }
+
+    String getCompareTarget() {
+        return compareTarget;
+    }
+
+    String getCompareMethod() {
+        return compareMethod;
+    }
+
+    ComparableTarget(Kind kind, MethodType methodType, int priority, Order order, String compareTarget, String compareMethod) {
         this.kind = kind;
         this.methodType = methodType;
         this.priority = priority;

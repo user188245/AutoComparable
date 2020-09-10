@@ -3,9 +3,13 @@ package auto.util;
 import com.sun.source.tree.*;
 
 import javax.annotation.processing.ProcessingEnvironment;
-import javax.lang.model.element.TypeElement;
+import javax.lang.model.element.*;
+import javax.lang.model.type.PrimitiveType;
+import javax.lang.model.type.TypeKind;
 import javax.lang.model.type.TypeMirror;
+import java.lang.annotation.Annotation;
 import java.util.List;
+import java.util.Set;
 
 //todo
 public interface AnnotationProcessorTool {
@@ -17,10 +21,39 @@ public interface AnnotationProcessorTool {
 
     TypeElement createTypeElement(Class<?> cls);
 
+    VariableElement createVariableElement(Set<Modifier> modifiers, TypeMirror varType, String varName, TypeElement from);
+
     ImportTree createImport(TypeElement e);
+
+    ModifiersTree createModifier(List<AnnotationTree> annotations, Set<Modifier> modifiers);
+
+    VariableTree createVariable(Set<Modifier> modifiers, TypeMirror type, String name, ExpressionTree init, Element from);
+
+    MethodInvocationTree createMethodInvocation(ExpressionTree methodExpr, List<ExpressionTree> args);
+
+    ReturnTree createReturn(ExpressionTree expr);
+
+    IfTree createIf(ExpressionTree condExpr, StatementTree thenExpr, StatementTree elseExpr);
+
+    BinaryTree createBinaryOperation(ExpressionTree leftExpr, ExpressionTree rightExpr, BinaryOperator binaryOperator);
+
+    TypeMirror createPrimitiveType(TypeKind kind);
+
+    <A extends Annotation> AnnotationTree createAnnotation(A annotation);
 
     TypeMirror createGenericTypeMirror(TypeMirror prototype, List<TypeMirror> genericsTypes);
 
+    MethodTree createMethod(List<AnnotationTree> annotations, ExecutableElement method, BlockTree block);
+
+    ExecutableElement createMethodPrototype(Set<Modifier> modifiers, String name, TypeMirror returnType, List<VariableElement> params, List<TypeMirror> thrown, TypeElement from);
+
+    BlockTree createBlock(Set<Modifier> modifiers, List<StatementTree> statements);
+
+    ExpressionTree createMemberSelect(String fullPath);
+
+    AssignmentTree createAssignment(ExpressionTree target, ExpressionTree value);
+
+    LiteralTree createLiteral(Object obj);
 
     //verify
 
@@ -38,15 +71,10 @@ public interface AnnotationProcessorTool {
 
     void injectMethod(ClassTree classTree, MethodTree methodTree);
 
-    void injectFieldAccessRight(MemberSelectTree memberSelectTree, String param);
-
-    void injectFieldAccessLeft(MemberSelectTree memberSelectTree, String param);
-
     // extraction
 
     ClassTree extractTree(CompilationUnitTree compilationUnit);
 
     TypeElement extractTypeElement(ClassTree classTree);
 
-    ExpressionTree extractMemberSelect(String fullPath);
 }

@@ -9,24 +9,20 @@ import auto.util.AnnotationProcessorTool;
 import auto.util.InterfaceWithGenericTypeInjector;
 import com.sun.source.tree.ExpressionTree;
 import com.sun.source.tree.MethodTree;
-import com.sun.tools.javac.tree.JCTree;
 
 import javax.lang.model.element.Element;
 import javax.lang.model.element.ExecutableElement;
 import javax.lang.model.element.TypeElement;
-import javax.lang.model.element.VariableElement;
 import javax.lang.model.type.TypeMirror;
 import java.util.ArrayList;
 import java.util.List;
 
 public class ComparableInjector extends InterfaceWithGenericTypeInjector {
 
-    private PrimitiveCompareMethod primitiveCompareMethod;
     private TypeMirror comparableType;
 
     public ComparableInjector(AnnotationProcessorTool annotationProcessorTool){
         super(Comparable.class, ComparableInjector.createGenericTypes(), annotationProcessorTool);
-        this.primitiveCompareMethod = new PrimitiveCompareMethodImpl(annotationProcessorTool);
         this.comparableType = annotationProcessorTool.createTypeElement(getInterface()).asType();
     }
 
@@ -34,6 +30,29 @@ public class ComparableInjector extends InterfaceWithGenericTypeInjector {
         List<Class<?>> genericTypes = new ArrayList<>(1);
         genericTypes.add(null); // Self Types
         return genericTypes;
+    }
+
+    private static String getPrimitiveCompareMethod(TypeMirror type){
+        switch(type.getKind()){
+            case INT:
+                return "Integer.Compare";
+            case LONG:
+                return "Long.compare";
+            case SHORT:
+                return "Short.compare";
+            case BYTE:
+                return "Byte.compare";
+            case CHAR:
+                return "Character.compare";
+            case BOOLEAN:
+                return "Boolean.compare";
+            case FLOAT:
+                return "Float.compare";
+            case DOUBLE:
+                return "Double.compare";
+            default:
+                return null;
+        }
     }
 
     //todo
@@ -52,24 +71,18 @@ public class ComparableInjector extends InterfaceWithGenericTypeInjector {
                 throw new IllegalArgumentException();
             }
             compareTargetType = ee.getReturnType();
-            compareTargetName = ee.getSimpleName().toString();
         }else{
-            if(e instanceof VariableElement){
-                compareTargetName = ((VariableElement)e).getSimpleName().toString();
-            }else{
-                compareTargetName = e.getSimpleName().toString();
-            }
-
             compareTargetType = e.asType();
         }
+        compareTargetName = e.getSimpleName().toString();
 
-        ExpressionTree compareMethod;
+        String compareMethod;
 
         //todo
         // CompareTo method must invoke alternative(substitute) method instead. if it exists,
         String alternativeMethodName = autoComparableTarget.alternativeCompareMethod();
         if(!alternativeMethodName.equals("")){
-            compareMethod = annotationProcessorTool.extractMemberSelect(alternativeMethodName);
+            compareMethod = alternativeMethodName;
             //todo
             // verify "compareMethod" (it must hold 2 parameter which is equal with compareTarget, int type as a return.)
             // but there's no way to find exact "method prototype" without explicit invocation by using java reflection.
@@ -78,7 +91,7 @@ public class ComparableInjector extends InterfaceWithGenericTypeInjector {
         }else{
             //todo
             // Field must be primitive type (not void) or Comparable (or super types of Comparable) or Containing @AutoComparable or Enum Type or use external compareTo method explicitly
-            compareMethod = primitiveCompareMethod.getPrimitiveMethodTree(compareTargetType);
+            compareMethod = getPrimitiveCompareMethod(compareTargetType);
             if(compareMethod == null){
                 if(!annotationProcessorTool.isSubtype(compareTargetType,comparableType) && compareTargetType.getAnnotation(AutoComparable.class) == null){
                     // it is not both primitive and Comparable and AutoComparable.
@@ -86,7 +99,7 @@ public class ComparableInjector extends InterfaceWithGenericTypeInjector {
                 }
                 // compareTarget has the method "compareTo"
                 type = ComparableTarget.MethodType.CompareTo;
-                compareMethod = annotationProcessorTool.extractMemberSelect("compareTo");
+                compareMethod = "compareTo";
             }
         }
 
@@ -96,7 +109,7 @@ public class ComparableInjector extends InterfaceWithGenericTypeInjector {
                 type,
                 autoComparableTarget.priority(),
                 autoComparableTarget.order(),
-                annotationProcessorTool.extractMemberSelect(compareTargetName),
+                compareTargetName,
                 compareMethod);
     }
 
@@ -146,6 +159,9 @@ public class ComparableInjector extends InterfaceWithGenericTypeInjector {
                 ComparableTarget ct = getComparableTarget(e, autoComparableTarget);
                 // 7. Collect All @AutoComparableTarget Members. Build List<ComparableTarget>
                 fields.add(ct);
+            }
+            if(fields.isEmpty()){
+                throw new IllegalArgumentException();
             }
             MethodGenerator methodGenerator = new CompareToMethodGenerator(fields,(autoComparable.isLowPriorityFirst())? Order.ASC:Order.DESC,annotationProcessorTool, cls);
             // 8. Generate CompareTo method by using CompareToMethodGenerator.

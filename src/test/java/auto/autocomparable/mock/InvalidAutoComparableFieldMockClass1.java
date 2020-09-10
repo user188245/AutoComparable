@@ -5,7 +5,7 @@ import auto.autocomparable.annotation.AutoComparableTarget;
 
 import java.util.Arrays;
 
-@AutoComparable
+//@AutoComparable
 public class InvalidAutoComparableFieldMockClass1 {
 
     @AutoComparableTarget(priority = 1)
