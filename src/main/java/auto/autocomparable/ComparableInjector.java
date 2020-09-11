@@ -35,7 +35,7 @@ public class ComparableInjector extends InterfaceWithGenericTypeInjector {
     private static String getPrimitiveCompareMethod(TypeMirror type){
         switch(type.getKind()){
             case INT:
-                return "Integer.Compare";
+                return "Integer.compare";
             case LONG:
                 return "Long.compare";
             case SHORT:
@@ -163,12 +163,12 @@ public class ComparableInjector extends InterfaceWithGenericTypeInjector {
             if(fields.isEmpty()){
                 throw new IllegalArgumentException();
             }
-            MethodGenerator methodGenerator = new CompareToMethodGenerator(fields,(autoComparable.isLowPriorityFirst())? Order.ASC:Order.DESC,annotationProcessorTool, cls);
-            // 8. Generate CompareTo method by using CompareToMethodGenerator.
-            MethodTree methodTree = methodGenerator.generateMethod();
-            // 9. Inject the method.
-            annotationProcessorTool.injectMethod(classTree,methodTree);
         }
+        MethodGenerator methodGenerator = new CompareToMethodGenerator(fields,(autoComparable.isLowPriorityFirst())? Order.ASC:Order.DESC,annotationProcessorTool, cls);
+        // 8. Generate CompareTo method by using CompareToMethodGenerator.
+        MethodTree methodTree = methodGenerator.generateMethod();
+        // 9. Inject the method.
+        annotationProcessorTool.injectMethod(classTree,methodTree);
     }
 
 

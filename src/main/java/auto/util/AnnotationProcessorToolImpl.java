@@ -4,7 +4,6 @@ import com.sun.source.tree.*;
 import com.sun.tools.javac.code.Flags;
 import com.sun.tools.javac.code.Symbol;
 import com.sun.tools.javac.code.Type;
-import com.sun.tools.javac.code.TypeTag;
 import com.sun.tools.javac.processing.JavacProcessingEnvironment;
 import com.sun.tools.javac.tree.JCTree;
 import com.sun.tools.javac.tree.TreeMaker;
@@ -24,7 +23,6 @@ import java.util.*;
 import static com.sun.tools.javac.code.Symbol.ClassSymbol;
 import static com.sun.tools.javac.tree.JCTree.*;
 
-//todo
 class AnnotationProcessorToolImpl implements AnnotationProcessorTool {
 
     private ProcessingEnvironment processingEnv;
@@ -56,8 +54,12 @@ class AnnotationProcessorToolImpl implements AnnotationProcessorTool {
     }
 
     @Override
-    public VariableElement createVariableElement(Set<Modifier> modifiers, TypeMirror varType, String varName, TypeElement from) {
-        return new Symbol.VarSymbol(getModifierFlag(modifiers),name(varName),(Type)varType,(Symbol)from);
+    public VariableElement createVariableElement(Set<Modifier> modifiers, TypeMirror varType, String varName, TypeElement from, boolean isParameter) {
+        Symbol.VarSymbol result = new Symbol.VarSymbol(getModifierFlag(modifiers),name(varName),(Type)varType,(Symbol)from);
+        if(isParameter){
+            result.flags_field |= Flags.PARAMETER;
+        }
+        return result;
     }
 
     @Override
@@ -68,13 +70,18 @@ class AnnotationProcessorToolImpl implements AnnotationProcessorTool {
 
     @Override
     public ModifiersTree createModifier(List<AnnotationTree> annotations, Set<Modifier> modifiers) {
-        return treeMaker.Modifiers(getModifierFlag(modifiers), com.sun.tools.javac.util.List.convert(JCAnnotation.class, com.sun.tools.javac.util.List.from(annotations)));
+        com.sun.tools.javac.util.List<JCAnnotation> expr;
+        if(annotations == null){
+            expr = com.sun.tools.javac.util.List.nil();
+        }else{
+            expr = com.sun.tools.javac.util.List.convert(JCAnnotation.class, com.sun.tools.javac.util.List.from(annotations));
+        }
+        return treeMaker.Modifiers(getModifierFlag(modifiers), expr);
     }
 
     @Override
-    public VariableTree createVariable(Set<Modifier> modifiers, TypeMirror type, String name, ExpressionTree init, Element from) {
-        Symbol.VarSymbol varSymbol = new Symbol.VarSymbol(getModifierFlag(modifiers),name(name),(Type)type,(Symbol)from);
-        return treeMaker.VarDef(varSymbol, (JCExpression)init);
+    public VariableTree createVariable(VariableElement variableElement, ExpressionTree init) {
+        return treeMaker.VarDef((Symbol.VarSymbol)variableElement, (JCExpression)init);
     }
 
     @Override
@@ -83,7 +90,7 @@ class AnnotationProcessorToolImpl implements AnnotationProcessorTool {
         if(args != null){
             expr = com.sun.tools.javac.util.List.convert(JCExpression.class, com.sun.tools.javac.util.List.from(args));
         }
-        return treeMaker.App((JCExpression)methodExpr, expr);
+        return treeMaker.Apply(com.sun.tools.javac.util.List.nil(), (JCExpression)methodExpr, expr);
     }
 
     @Override
@@ -159,6 +166,9 @@ class AnnotationProcessorToolImpl implements AnnotationProcessorTool {
 
     @Override
     public TypeMirror createGenericTypeMirror(TypeMirror prototype, List<TypeMirror> genericTypes) {
+        if(genericTypes == null){
+            throw new IllegalArgumentException();
+        }
         Type.ClassType type = (Type.ClassType) prototype;
         Type.ClassType newType = type.cloneWithMetadata(type.getMetadata());
         newType.typarams_field = com.sun.tools.javac.util.List.convert(Type.class,com.sun.tools.javac.util.List.from(genericTypes));

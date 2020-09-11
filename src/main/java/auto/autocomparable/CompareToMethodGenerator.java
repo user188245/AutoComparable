@@ -29,9 +29,9 @@ class CompareToMethodGenerator implements MethodGenerator {
     CompareToMethodGenerator(List<ComparableTarget> targets, Order priorityOrder, AnnotationProcessorTool annotationProcessorTool, TypeElement self) {
         this.targets = targets;
         if(priorityOrder == Order.DESC){
-            targets.sort(Collections.reverseOrder());
-        }else{
             Collections.sort(targets);
+        }else{
+            targets.sort(Collections.reverseOrder());
         }
         this.apt = annotationProcessorTool;
         this.self = self;
@@ -39,20 +39,10 @@ class CompareToMethodGenerator implements MethodGenerator {
     }
 
     @Override
-    //todo
-    // 1. sort targets by the order 'priorityOrder'.
-    // 2. build
-    //   foreach item from List<ComparableTarget>
-    //   int v0 = Assignment(item);
-    //    if( vo == 0){
-    //       next Items here
-    //    }
-    //    return v0;
-
     public MethodTree generateMethod() {
 
         List<VariableElement> paramVars = new LinkedList<>();
-        paramVars.add(apt.createVariableElement(null, self.asType(), paramName, self));
+        paramVars.add(apt.createVariableElement(null, self.asType(), paramName, self,true));
 
         ExecutableElement methodPrototype = apt.createMethodPrototype(
                 EnumSet.of(Modifier.PUBLIC),
@@ -62,43 +52,50 @@ class CompareToMethodGenerator implements MethodGenerator {
                 null,
                 self);
 
-        List<StatementTree> body = new LinkedList<>();
-        BlockTree block = apt.createBlock(null, body);
+        List<StatementTree> body = null;
         int i = 0;
-        Iterator<ComparableTarget> itr = targets.iterator();
-        ComparableTarget target;
-        while((target = itr.next()) != null){
+        for(ComparableTarget target : targets){
 
-            List<StatementTree> newBody = null;
-
+            //base
             String varName = baseVar + i++;
             ExpressionTree var = apt.createMemberSelect(varName);
 
-            VariableTree assignment = generateAssignment(varName,target); // v# = compare(this.?, o.?);
+            // init
+            VariableTree assignment = generateAssignment(varName,target); // v# = compare(this.?, o.?); or v# = this.?.compareTo(o.?);
+
+            // if
+            IfTree ift = null;
+            if(body != null){
+                ift = apt.createIf(
+                    apt.createBinaryOperation(var,apt.createLiteral(0),
+                    BinaryOperator.EQ),
+                    apt.createBlock(null, body),
+            null); // if( v# == 0 ) then {Itr[v#-1]}
+            }
+            body = null;
+            body = new LinkedList<>();
+
+            // return
+            ReturnTree rtn = apt.createReturn(var); // return v#;
+
+            // body creation
             body.add(assignment);
-            if(itr.hasNext()){
-                newBody = new LinkedList<>();
-                IfTree ift = apt.createIf(apt.createBinaryOperation(var,apt.createLiteral(0), BinaryOperator.EQ), apt.createBlock(null, newBody), null); // if( v# == 0) then Next
+            if(ift != null){
                 body.add(ift);
             }
-            ReturnTree rtn = apt.createReturn(var); // return v#;
             body.add(rtn);
 
-            if(newBody != null){
-                body = newBody;
-            }
         }
+        BlockTree block = apt.createBlock(null, body);
         return apt.createMethod(null, methodPrototype, block); // @Generated, @Override will be added.
     }
 
-
-    //todo
     private VariableTree generateAssignment(String variable, ComparableTarget comparableTarget){
         ExpressionTree methodCall = generateMethodCall(comparableTarget);
-        return apt.createVariable(null, intType, variable, methodCall, null);
+        VariableElement variableElement = apt.createVariableElement(null,intType, variable, null,false);
+        return apt.createVariable(variableElement, methodCall);
     }
 
-    //todo
     private MethodInvocationTree generateMethodCall(ComparableTarget comparableTarget){
 
         StringBuilder targetAccess = new StringBuilder(comparableTarget.getCompareTarget());

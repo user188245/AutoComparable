@@ -21,13 +21,13 @@ public interface AnnotationProcessorTool {
 
     TypeElement createTypeElement(Class<?> cls);
 
-    VariableElement createVariableElement(Set<Modifier> modifiers, TypeMirror varType, String varName, TypeElement from);
+    VariableElement createVariableElement(Set<Modifier> modifiers, TypeMirror varType, String varName, TypeElement from, boolean isParameter);
 
     ImportTree createImport(TypeElement e);
 
     ModifiersTree createModifier(List<AnnotationTree> annotations, Set<Modifier> modifiers);
 
-    VariableTree createVariable(Set<Modifier> modifiers, TypeMirror type, String name, ExpressionTree init, Element from);
+    VariableTree createVariable(VariableElement variableElement, ExpressionTree init);
 
     MethodInvocationTree createMethodInvocation(ExpressionTree methodExpr, List<ExpressionTree> args);
 
