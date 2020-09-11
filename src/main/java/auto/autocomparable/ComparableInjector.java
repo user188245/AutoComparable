@@ -3,11 +3,10 @@ package auto.autocomparable;
 import auto.autocomparable.annotation.AutoComparable;
 import auto.autocomparable.annotation.AutoComparableTarget;
 import auto.autocomparable.annotation.Order;
-import auto.util.MethodGenerator;
-import com.sun.source.tree.ClassTree;
 import auto.util.AnnotationProcessorTool;
 import auto.util.InterfaceWithGenericTypeInjector;
-import com.sun.source.tree.ExpressionTree;
+import auto.util.MethodGenerator;
+import com.sun.source.tree.ClassTree;
 import com.sun.source.tree.MethodTree;
 
 import javax.lang.model.element.Element;
@@ -134,7 +133,7 @@ public class ComparableInjector extends InterfaceWithGenericTypeInjector {
 
         // 2. Get @AutoComparable.isLowPriorityFirst
         AutoComparable autoComparable = cls.getAnnotation(AutoComparable.class);
-        List<ComparableTarget> fields = new ArrayList<ComparableTarget>();
+        List<ComparableTarget> fields = new ArrayList<>();
 
         // 3. Find Field member containing @AutoComparableTarget
         List<? extends Element> classFields = cls.getEnclosedElements();
@@ -170,7 +169,4 @@ public class ComparableInjector extends InterfaceWithGenericTypeInjector {
         // 9. Inject the method.
         annotationProcessorTool.injectMethod(classTree,methodTree);
     }
-
-
-
 }

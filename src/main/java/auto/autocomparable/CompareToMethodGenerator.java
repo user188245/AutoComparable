@@ -1,20 +1,21 @@
 package auto.autocomparable;
 
 import auto.autocomparable.annotation.Order;
-import auto.util.BinaryOperator;
-import com.sun.source.tree.*;
 import auto.util.AnnotationProcessorTool;
+import auto.util.BinaryOperator;
 import auto.util.MethodGenerator;
+import com.sun.source.tree.*;
 
 import javax.lang.model.element.ExecutableElement;
 import javax.lang.model.element.Modifier;
 import javax.lang.model.element.TypeElement;
 import javax.lang.model.element.VariableElement;
-import javax.lang.model.type.PrimitiveType;
 import javax.lang.model.type.TypeKind;
 import javax.lang.model.type.TypeMirror;
-import java.sql.Statement;
-import java.util.*;
+import java.util.Collections;
+import java.util.EnumSet;
+import java.util.LinkedList;
+import java.util.List;
 
 class CompareToMethodGenerator implements MethodGenerator {
     private List<ComparableTarget> targets;
@@ -42,7 +43,7 @@ class CompareToMethodGenerator implements MethodGenerator {
     public MethodTree generateMethod() {
 
         List<VariableElement> paramVars = new LinkedList<>();
-        paramVars.add(apt.createVariableElement(null, self.asType(), paramName, self,true));
+        paramVars.add(apt.createParameterElement(self.asType(), paramName, self));
 
         ExecutableElement methodPrototype = apt.createMethodPrototype(
                 EnumSet.of(Modifier.PUBLIC),
@@ -72,7 +73,6 @@ class CompareToMethodGenerator implements MethodGenerator {
                     apt.createBlock(null, body),
             null); // if( v# == 0 ) then {Itr[v#-1]}
             }
-            body = null;
             body = new LinkedList<>();
 
             // return
@@ -84,7 +84,6 @@ class CompareToMethodGenerator implements MethodGenerator {
                 body.add(ift);
             }
             body.add(rtn);
-
         }
         BlockTree block = apt.createBlock(null, body);
         return apt.createMethod(null, methodPrototype, block); // @Generated, @Override will be added.
@@ -92,7 +91,7 @@ class CompareToMethodGenerator implements MethodGenerator {
 
     private VariableTree generateAssignment(String variable, ComparableTarget comparableTarget){
         ExpressionTree methodCall = generateMethodCall(comparableTarget);
-        VariableElement variableElement = apt.createVariableElement(null,intType, variable, null,false);
+        VariableElement variableElement = apt.createVariableElement(null,intType, variable, null);
         return apt.createVariable(variableElement, methodCall);
     }
 

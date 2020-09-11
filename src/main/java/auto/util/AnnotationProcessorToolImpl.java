@@ -12,13 +12,19 @@ import com.sun.tools.javac.util.Name;
 import com.sun.tools.javac.util.Names;
 
 import javax.annotation.processing.ProcessingEnvironment;
-import javax.lang.model.element.*;
+import javax.lang.model.element.ExecutableElement;
+import javax.lang.model.element.Modifier;
+import javax.lang.model.element.TypeElement;
+import javax.lang.model.element.VariableElement;
 import javax.lang.model.type.TypeKind;
 import javax.lang.model.type.TypeMirror;
 import javax.lang.model.util.Elements;
 import javax.lang.model.util.Types;
 import java.lang.annotation.Annotation;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Set;
 
 import static com.sun.tools.javac.code.Symbol.ClassSymbol;
 import static com.sun.tools.javac.tree.JCTree.*;
@@ -53,13 +59,16 @@ class AnnotationProcessorToolImpl implements AnnotationProcessorTool {
         return elements.getTypeElement(cls.getCanonicalName());
     }
 
+
+
     @Override
-    public VariableElement createVariableElement(Set<Modifier> modifiers, TypeMirror varType, String varName, TypeElement from, boolean isParameter) {
-        Symbol.VarSymbol result = new Symbol.VarSymbol(getModifierFlag(modifiers),name(varName),(Type)varType,(Symbol)from);
-        if(isParameter){
-            result.flags_field |= Flags.PARAMETER;
-        }
-        return result;
+    public VariableElement createVariableElement(Set<Modifier> modifiers, TypeMirror varType, String varName, TypeElement from) {
+        return new Symbol.VarSymbol(getModifierFlag(modifiers), name(varName), (Type)varType, (Symbol)from);
+    }
+
+    @Override
+    public VariableElement createParameterElement(TypeMirror varType, String varName, TypeElement from) {
+        return new Symbol.VarSymbol(Flags.PARAMETER, name(varName), (Type)varType, (Symbol)from);
     }
 
     @Override
@@ -146,7 +155,7 @@ class AnnotationProcessorToolImpl implements AnnotationProcessorTool {
             default:
                 return null;
         }
-    };
+    }
 
     @Override
     public BinaryTree createBinaryOperation(ExpressionTree leftExpr, ExpressionTree rightExpr, BinaryOperator binaryOperator) {
@@ -392,6 +401,16 @@ class AnnotationProcessorToolImpl implements AnnotationProcessorTool {
     @Override
     public TypeElement extractTypeElement(ClassTree classTree) {
         return ((JCClassDecl)classTree).sym;
+    }
+
+    @Override
+    public int extractPosition(Tree tree) {
+        return ((JCTree)tree).pos;
+    }
+
+    @Override
+    public Tree setPosition(Tree tree, int pos) {
+        return ((JCTree)tree).setPos(pos);
     }
 
     private Name name(String s){

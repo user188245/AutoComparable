@@ -1,7 +1,6 @@
 package auto.autocomparable;
 
 import auto.autocomparable.annotation.Order;
-import com.sun.source.tree.ExpressionTree;
 
 class ComparableTarget implements Comparable<ComparableTarget>{
 

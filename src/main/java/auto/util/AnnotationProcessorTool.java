@@ -3,8 +3,10 @@ package auto.util;
 import com.sun.source.tree.*;
 
 import javax.annotation.processing.ProcessingEnvironment;
-import javax.lang.model.element.*;
-import javax.lang.model.type.PrimitiveType;
+import javax.lang.model.element.ExecutableElement;
+import javax.lang.model.element.Modifier;
+import javax.lang.model.element.TypeElement;
+import javax.lang.model.element.VariableElement;
 import javax.lang.model.type.TypeKind;
 import javax.lang.model.type.TypeMirror;
 import java.lang.annotation.Annotation;
@@ -21,7 +23,9 @@ public interface AnnotationProcessorTool {
 
     TypeElement createTypeElement(Class<?> cls);
 
-    VariableElement createVariableElement(Set<Modifier> modifiers, TypeMirror varType, String varName, TypeElement from, boolean isParameter);
+    VariableElement createVariableElement(Set<Modifier> modifiers, TypeMirror varType, String varName, TypeElement from);
+
+    VariableElement createParameterElement(TypeMirror varType, String varName, TypeElement from);
 
     ImportTree createImport(TypeElement e);
 
@@ -76,5 +80,13 @@ public interface AnnotationProcessorTool {
     ClassTree extractTree(CompilationUnitTree compilationUnit);
 
     TypeElement extractTypeElement(ClassTree classTree);
+
+    int extractPosition(Tree tree);
+
+    // modify
+
+    Tree setPosition(Tree tree, int pos);
+
+
 
 }

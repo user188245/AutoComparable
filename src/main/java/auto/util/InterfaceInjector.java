@@ -8,15 +8,12 @@ import javax.lang.model.element.TypeElement;
 import javax.lang.model.type.TypeMirror;
 import java.lang.reflect.Field;
 
-import static javax.lang.model.element.ElementKind.CLASS;
-
 public abstract class InterfaceInjector implements CompilationUnitProcessor {
 
     protected AnnotationProcessorTool annotationProcessorTool;
     private Class<?> inf;
     private Field[] fields;
     TypeElement infType;
-
 
     public InterfaceInjector(Class<?> inf, AnnotationProcessorTool annotationProcessorTool) throws IllegalArgumentException{
         setAnnotationProcessorTool(annotationProcessorTool);
