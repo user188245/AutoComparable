@@ -10,6 +10,7 @@ import com.sun.source.tree.ClassTree;
 import com.sun.source.tree.MethodTree;
 
 import javax.lang.model.element.Element;
+import javax.lang.model.element.ElementKind;
 import javax.lang.model.element.ExecutableElement;
 import javax.lang.model.element.TypeElement;
 import javax.lang.model.type.TypeMirror;
@@ -18,11 +19,13 @@ import java.util.List;
 
 public class ComparableInjector extends InterfaceWithGenericTypeInjector {
 
-    private TypeMirror comparableType;
+    private static TypeMirror comparableType = null;
 
     public ComparableInjector(AnnotationProcessorTool annotationProcessorTool){
         super(Comparable.class, ComparableInjector.createGenericTypes(), annotationProcessorTool);
-        this.comparableType = annotationProcessorTool.createTypeElement(getInterface()).asType();
+        if(comparableType == null){
+            comparableType = annotationProcessorTool.createPureType(annotationProcessorTool.createTypeElement(getInterface()).asType());
+        }
     }
 
     private static List<Class<?>> createGenericTypes(){
@@ -56,7 +59,7 @@ public class ComparableInjector extends InterfaceWithGenericTypeInjector {
 
     //todo
     private ComparableTarget getComparableTarget(Element e, AutoComparableTarget autoComparableTarget){
-        if(!e.getKind().isField()){
+        if(e.getKind() != ElementKind.FIELD && e.getKind() != ElementKind.METHOD){
             throw new IllegalArgumentException();
         }
         ComparableTarget.Kind kind = ComparableTarget.Kind.Field;
@@ -93,7 +96,7 @@ public class ComparableInjector extends InterfaceWithGenericTypeInjector {
             compareMethod = getPrimitiveCompareMethod(compareTargetType);
             if(compareMethod == null){
                 if(!annotationProcessorTool.isSubtype(compareTargetType,comparableType) && compareTargetType.getAnnotation(AutoComparable.class) == null){
-                    // it is not both primitive and Comparable and AutoComparable.
+                    // it is nether primitive nor Comparable nor AutoComparable.
                     throw new IllegalArgumentException();
                 }
                 // compareTarget has the method "compareTo"

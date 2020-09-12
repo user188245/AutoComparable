@@ -14,6 +14,7 @@ public abstract class InterfaceInjector implements CompilationUnitProcessor {
     private Class<?> inf;
     private Field[] fields;
     TypeElement infType;
+    private TreePositionCorrector treePositionCorrector;
 
     public InterfaceInjector(Class<?> inf, AnnotationProcessorTool annotationProcessorTool) throws IllegalArgumentException{
         setAnnotationProcessorTool(annotationProcessorTool);
@@ -23,6 +24,7 @@ public abstract class InterfaceInjector implements CompilationUnitProcessor {
         this.inf = inf;
         this.fields = inf.getFields();
         this.infType = annotationProcessorTool.createTypeElement(inf);
+        this.treePositionCorrector = TreePositionCorrectorFactory.instance();
     }
 
     public void setAnnotationProcessorTool(AnnotationProcessorTool annotationProcessorTool) {
@@ -46,6 +48,7 @@ public abstract class InterfaceInjector implements CompilationUnitProcessor {
         }
         injectInterface(classTree);
         processAfterInterfaceInjection(classTree);
+        treePositionCorrector.correctPosition(classTree);
         return compilationUnit;
     }
 
@@ -58,7 +61,7 @@ public abstract class InterfaceInjector implements CompilationUnitProcessor {
         annotationProcessorTool.injectInterface(classTree, infType);
     }
 
-    protected TypeMirror getInfTypeMirror(TypeElement cls){
+    protected TypeMirror getInfTypeMirror(TypeElement self){
         return infType.asType();
     }
 

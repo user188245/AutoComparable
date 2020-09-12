@@ -47,9 +47,9 @@ public abstract class InterfaceWithGenericTypeInjector extends InterfaceInjector
     }
 
     @Override
-    protected TypeMirror getInfTypeMirror(TypeElement cls) {
+    protected TypeMirror getInfTypeMirror(TypeElement self) {
         TypeMirror typeMirror = infType.asType();
-        List<TypeElement> genericsTypeElementsWithSubstitute = createGenericTypeElementsWithSubstitute(genericTypeElements,cls);
+        List<TypeElement> genericsTypeElementsWithSubstitute = createGenericTypeElementsWithSubstitute(genericTypeElements,self);
         List<TypeMirror> genericsTypeMirrors = new LinkedList<>();
         genericsTypeElementsWithSubstitute.forEach(x->genericsTypeMirrors.add(x.asType()));
         return annotationProcessorTool.createGenericTypeMirror(typeMirror,genericsTypeMirrors);

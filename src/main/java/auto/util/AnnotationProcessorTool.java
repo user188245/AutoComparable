@@ -9,7 +9,6 @@ import javax.lang.model.element.TypeElement;
 import javax.lang.model.element.VariableElement;
 import javax.lang.model.type.TypeKind;
 import javax.lang.model.type.TypeMirror;
-import java.lang.annotation.Annotation;
 import java.util.List;
 import java.util.Set;
 
@@ -22,6 +21,8 @@ public interface AnnotationProcessorTool {
     // creation
 
     TypeElement createTypeElement(Class<?> cls);
+
+    TypeMirror createPureType(TypeMirror typeWithGenerics);
 
     VariableElement createVariableElement(Set<Modifier> modifiers, TypeMirror varType, String varName, TypeElement from);
 
@@ -43,8 +44,6 @@ public interface AnnotationProcessorTool {
 
     TypeMirror createPrimitiveType(TypeKind kind);
 
-    <A extends Annotation> AnnotationTree createAnnotation(A annotation);
-
     TypeMirror createGenericTypeMirror(TypeMirror prototype, List<TypeMirror> genericsTypes);
 
     MethodTree createMethod(List<AnnotationTree> annotations, ExecutableElement method, BlockTree block);
@@ -55,9 +54,15 @@ public interface AnnotationProcessorTool {
 
     ExpressionTree createMemberSelect(String fullPath);
 
+    ExpressionTree createMemberSelect(ExpressionTree start, String fullPath);
+
     AssignmentTree createAssignment(ExpressionTree target, ExpressionTree value);
 
     LiteralTree createLiteral(Object obj);
+
+
+    AnnotationTree createOverrideAnnotation();
+
 
     //verify
 
@@ -80,13 +85,5 @@ public interface AnnotationProcessorTool {
     ClassTree extractTree(CompilationUnitTree compilationUnit);
 
     TypeElement extractTypeElement(ClassTree classTree);
-
-    int extractPosition(Tree tree);
-
-    // modify
-
-    Tree setPosition(Tree tree, int pos);
-
-
 
 }

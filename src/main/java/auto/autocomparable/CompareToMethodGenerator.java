@@ -41,7 +41,6 @@ class CompareToMethodGenerator implements MethodGenerator {
 
     @Override
     public MethodTree generateMethod() {
-
         List<VariableElement> paramVars = new LinkedList<>();
         paramVars.add(apt.createParameterElement(self.asType(), paramName, self));
 
@@ -86,7 +85,9 @@ class CompareToMethodGenerator implements MethodGenerator {
             body.add(rtn);
         }
         BlockTree block = apt.createBlock(null, body);
-        return apt.createMethod(null, methodPrototype, block); // @Generated, @Override will be added.
+        List<AnnotationTree> annotations = new LinkedList<>();
+        annotations.add(apt.createOverrideAnnotation());
+        return apt.createMethod(annotations, methodPrototype, block);
     }
 
     private VariableTree generateAssignment(String variable, ComparableTarget comparableTarget){
@@ -99,19 +100,24 @@ class CompareToMethodGenerator implements MethodGenerator {
 
         StringBuilder targetAccess = new StringBuilder(comparableTarget.getCompareTarget());
 
-        if(comparableTarget.getKind() == ComparableTarget.Kind.Method){
-            targetAccess.append("()");
-        }
+        ExpressionTree left;
+        ExpressionTree right;
 
-        ExpressionTree left = apt.createMemberSelect("this" + "." + targetAccess);
-        ExpressionTree right = apt.createMemberSelect(paramName + "." + targetAccess);
 
         if(comparableTarget.getOrder() == Order.DESC){
-            ExpressionTree swap;
-            swap = left;
-            left = right;
-            right = swap;
+            right = apt.createMemberSelect("this" + "." + targetAccess);
+            left = apt.createMemberSelect(paramName + "." + targetAccess);
+        }else{
+            left = apt.createMemberSelect("this" + "." + targetAccess);
+            right = apt.createMemberSelect(paramName + "." + targetAccess);
         }
+
+        if(comparableTarget.getKind() == ComparableTarget.Kind.Method){
+            left = apt.createMethodInvocation(left, null);
+            right = apt.createMethodInvocation(right, null);
+        }
+
+
 
         ExpressionTree methodSelect;
         List<ExpressionTree> params = new LinkedList<>();
@@ -121,9 +127,11 @@ class CompareToMethodGenerator implements MethodGenerator {
             methodSelect = apt.createMemberSelect(comparableTarget.getCompareMethod());
         }else{
             params.add(right);
-            methodSelect = apt.createMemberSelect(left + "." + comparableTarget.getCompareMethod());
+            methodSelect = apt.createMemberSelect(left, comparableTarget.getCompareMethod());
         }
         return apt.createMethodInvocation(methodSelect,params);
     }
+
+
 
 }

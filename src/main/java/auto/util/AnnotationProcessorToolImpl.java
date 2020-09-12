@@ -1,6 +1,7 @@
 package auto.util;
 
 import com.sun.source.tree.*;
+import com.sun.tools.javac.code.Attribute;
 import com.sun.tools.javac.code.Flags;
 import com.sun.tools.javac.code.Symbol;
 import com.sun.tools.javac.code.Type;
@@ -20,7 +21,6 @@ import javax.lang.model.type.TypeKind;
 import javax.lang.model.type.TypeMirror;
 import javax.lang.model.util.Elements;
 import javax.lang.model.util.Types;
-import java.lang.annotation.Annotation;
 import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
@@ -59,7 +59,13 @@ class AnnotationProcessorToolImpl implements AnnotationProcessorTool {
         return elements.getTypeElement(cls.getCanonicalName());
     }
 
-
+    @Override
+    public TypeMirror createPureType(TypeMirror typeWithGenerics) {
+        Type.ClassType type = (Type.ClassType)typeWithGenerics;
+        type = type.cloneWithMetadata(type.getMetadata());
+        type.typarams_field = com.sun.tools.javac.util.List.nil();
+        return type;
+    }
 
     @Override
     public VariableElement createVariableElement(Set<Modifier> modifiers, TypeMirror varType, String varName, TypeElement from) {
@@ -95,9 +101,11 @@ class AnnotationProcessorToolImpl implements AnnotationProcessorTool {
 
     @Override
     public MethodInvocationTree createMethodInvocation(ExpressionTree methodExpr, List<ExpressionTree> args) {
-        com.sun.tools.javac.util.List<JCExpression> expr = null;
+        com.sun.tools.javac.util.List<JCExpression> expr;
         if(args != null){
             expr = com.sun.tools.javac.util.List.convert(JCExpression.class, com.sun.tools.javac.util.List.from(args));
+        }else{
+            expr = com.sun.tools.javac.util.List.nil();
         }
         return treeMaker.Apply(com.sun.tools.javac.util.List.nil(), (JCExpression)methodExpr, expr);
     }
@@ -167,12 +175,6 @@ class AnnotationProcessorToolImpl implements AnnotationProcessorTool {
         return types.getPrimitiveType(kind);
     }
 
-    //todo
-    @Override
-    public <A extends Annotation> AnnotationTree createAnnotation(A annotation) {
-        return null;
-    }
-
     @Override
     public TypeMirror createGenericTypeMirror(TypeMirror prototype, List<TypeMirror> genericTypes) {
         if(genericTypes == null){
@@ -192,7 +194,6 @@ class AnnotationProcessorToolImpl implements AnnotationProcessorTool {
         return jcMethodDecl;
     }
 
-    //todo
     @Override
     public ExecutableElement createMethodPrototype(Set<Modifier> modifiers, String name, TypeMirror returnType, List<VariableElement> params, List<TypeMirror> thrown, TypeElement from) {
         List<TypeMirror> paramTypes = new LinkedList<>();
@@ -240,6 +241,15 @@ class AnnotationProcessorToolImpl implements AnnotationProcessorTool {
     }
 
     @Override
+    public ExpressionTree createMemberSelect(ExpressionTree start, String fullPath) {
+        JCExpression member = (JCExpression)start;
+        for (String s : fullPath.split("\\.")) {
+            member = treeMaker.Select(member, name(s));
+        }
+        return member;
+    }
+
+    @Override
     public AssignmentTree createAssignment(ExpressionTree target, ExpressionTree value) {
         return null;
     }
@@ -247,6 +257,11 @@ class AnnotationProcessorToolImpl implements AnnotationProcessorTool {
     @Override
     public LiteralTree createLiteral(Object obj) {
         return treeMaker.Literal(obj);
+    }
+
+    @Override
+    public AnnotationTree createOverrideAnnotation() {
+        return treeMaker.Annotation(new Attribute.Compound((Type)createTypeElement(Override.class).asType(), com.sun.tools.javac.util.List.nil()));
     }
 
 
@@ -403,15 +418,6 @@ class AnnotationProcessorToolImpl implements AnnotationProcessorTool {
         return ((JCClassDecl)classTree).sym;
     }
 
-    @Override
-    public int extractPosition(Tree tree) {
-        return ((JCTree)tree).pos;
-    }
-
-    @Override
-    public Tree setPosition(Tree tree, int pos) {
-        return ((JCTree)tree).setPos(pos);
-    }
 
     private Name name(String s){
         return names.fromString(s);
