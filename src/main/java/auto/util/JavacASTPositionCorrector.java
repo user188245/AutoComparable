@@ -1,13 +1,13 @@
 package auto.util;
 
-import com.sun.source.tree.Tree;
+import auto.util.wrapper.ASTWrapper;
 import com.sun.tools.javac.tree.JCTree;
 import com.sun.tools.javac.tree.Pretty;
 
 import java.io.IOException;
 import java.io.Writer;
 
-class TreePositionCorrectorImpl extends Pretty implements TreePositionCorrector {
+class JavacASTPositionCorrector extends Pretty implements ASTPositionCorrector {
 
     private final PositionWriter positionWriterMirror;
 
@@ -20,18 +20,18 @@ class TreePositionCorrectorImpl extends Pretty implements TreePositionCorrector 
         private int pos;
 
         @Override
-        public void write(char[] cbuf, int off, int len) throws IOException {
+        public void write(char[] cbuf, int off, int len){
             pos += Math.min(len, cbuf.length - off);
         }
 
         @Override
-        public void flush() throws IOException {}
+        public void flush(){}
 
         @Override
-        public void close() throws IOException {}
+        public void close(){}
     }
 
-    TreePositionCorrectorImpl(PositionWriter positionWriter){
+    JavacASTPositionCorrector(PositionWriter positionWriter){
         super(positionWriter,false);
         positionWriterMirror = positionWriter;
     }
@@ -44,9 +44,9 @@ class TreePositionCorrectorImpl extends Pretty implements TreePositionCorrector 
 
     @Override
     @SuppressWarnings("all")
-    public void correctPosition(Tree tree) {
+    public void correctPosition(ASTWrapper tree) {
         try {
-            printExpr((JCTree)tree);
+            printExpr((JCTree)tree.getData());
         } catch (IOException e) { }
     }
 }

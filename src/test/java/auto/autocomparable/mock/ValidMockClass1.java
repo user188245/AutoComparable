@@ -45,7 +45,7 @@ public class ValidMockClass1 implements Cloneable{
     public static Comparator<ValidMockClass1> getExpectedComparator() {
             return new Comparator<ValidMockClass1>() {
                 @Override
-                public int compare(ValidMockClass1 o1, ValidMockClass1 o2) {
+                public int compare(final ValidMockClass1 o1, final ValidMockClass1 o2) {
                     return ValidMockClass1.expectedCompare(o1,o2);
                 }
             };

@@ -1,9 +1,9 @@
 package auto.util;
 
-import com.sun.source.tree.CompilationUnitTree;
+import auto.util.wrapper.CompilationUnitWrapper;
 
 public interface CompilationUnitProcessor {
 
-    CompilationUnitTree process(CompilationUnitTree compilationUnit);
+    CompilationUnitWrapper process(CompilationUnitWrapper compilationUnit);
 
 }

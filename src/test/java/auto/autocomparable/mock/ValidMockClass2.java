@@ -57,7 +57,11 @@ public class ValidMockClass2 implements Cloneable{
 
     @AutoComparableTarget(priority = 1, order = Order.ASC)
     public Integer sum(){
-        return field3.stream().reduce(Integer::sum).orElse(null);
+        int sum = 0;
+        for(int i : field3){
+            sum += i;
+        }
+        return sum;
     }
 
     @Override

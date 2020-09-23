@@ -1,6 +1,5 @@
 package auto.autocomparable.mock;
 
-import auto.autocomparable.annotation.AutoComparable;
 import auto.autocomparable.annotation.AutoComparableTarget;
 
 import java.util.Objects;

@@ -1,9 +1,9 @@
 package auto.util;
 
-import com.sun.source.tree.MethodTree;
+import auto.util.wrapper.MethodWrapper;
 
 public interface MethodGenerator {
 
-    MethodTree generateMethod();
+    MethodWrapper generateMethod();
 
 }

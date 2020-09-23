@@ -1,6 +1,8 @@
 package auto.util;
 
+import auto.util.wrapper.*;
 import com.sun.source.tree.*;
+import com.sun.source.util.Trees;
 import com.sun.tools.javac.code.Attribute;
 import com.sun.tools.javac.code.Flags;
 import com.sun.tools.javac.code.Symbol;
@@ -11,16 +13,13 @@ import com.sun.tools.javac.tree.TreeMaker;
 import com.sun.tools.javac.util.Context;
 import com.sun.tools.javac.util.Name;
 import com.sun.tools.javac.util.Names;
+import com.sun.tools.javac.util.Pair;
 
-import javax.annotation.processing.ProcessingEnvironment;
 import javax.lang.model.element.ExecutableElement;
 import javax.lang.model.element.Modifier;
 import javax.lang.model.element.TypeElement;
 import javax.lang.model.element.VariableElement;
-import javax.lang.model.type.TypeKind;
 import javax.lang.model.type.TypeMirror;
-import javax.lang.model.util.Elements;
-import javax.lang.model.util.Types;
 import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
@@ -29,34 +28,18 @@ import java.util.Set;
 import static com.sun.tools.javac.code.Symbol.ClassSymbol;
 import static com.sun.tools.javac.tree.JCTree.*;
 
-class AnnotationProcessorToolImpl implements AnnotationProcessorTool {
+class JavacAnnotationProcessorTool extends AbstractAnnotationProcessorTool {
 
-    private ProcessingEnvironment processingEnv;
-    private Elements elements;
-    private Types types;
+    private Trees trees;
     private TreeMaker treeMaker;
     private Names names;
 
-    AnnotationProcessorToolImpl(ProcessingEnvironment processingEnv) {
-        this.processingEnv = processingEnv;
-        this.elements = processingEnv.getElementUtils();
-        this.types = processingEnv.getTypeUtils();
-        if(!(processingEnv instanceof JavacProcessingEnvironment)){
-            throw new IllegalArgumentException();
-        }
-        Context cxt = ((JavacProcessingEnvironment) processingEnv).getContext();
+    JavacAnnotationProcessorTool(JavacProcessingEnvironment processingEnv) {
+        super(processingEnv);
+        this.trees = Trees.instance(processingEnv);
+        Context cxt = processingEnv.getContext();
         this.treeMaker = TreeMaker.instance(cxt);
         this.names = Names.instance(cxt);
-    }
-
-    @Override
-    public ProcessingEnvironment getProcessingEnvironment() {
-        return this.processingEnv;
-    }
-
-    @Override
-    public TypeElement createTypeElement(Class<?> cls) {
-        return elements.getTypeElement(cls.getCanonicalName());
     }
 
     @Override
@@ -78,46 +61,55 @@ class AnnotationProcessorToolImpl implements AnnotationProcessorTool {
     }
 
     @Override
-    public ImportTree createImport(TypeElement e) {
+    public ImportWrapper<ImportTree> createImport(TypeElement e) {
         ClassSymbol classSymbol = (ClassSymbol)e;
-        return treeMaker.Import(treeMaker.QualIdent(classSymbol),false);
+        return ImportWrapper.from(treeMaker.Import(treeMaker.QualIdent(classSymbol),false));
     }
 
     @Override
-    public ModifiersTree createModifier(List<AnnotationTree> annotations, Set<Modifier> modifiers) {
+    public ModifiersWrapper<ModifiersTree> createModifier(List<AnnotationWrapper> annotations, Set<Modifier> modifiers) {
         com.sun.tools.javac.util.List<JCAnnotation> expr;
         if(annotations == null){
             expr = com.sun.tools.javac.util.List.nil();
         }else{
-            expr = com.sun.tools.javac.util.List.convert(JCAnnotation.class, com.sun.tools.javac.util.List.from(annotations));
+            List<JCAnnotation> annotationTrees = new LinkedList<JCAnnotation>();
+            for(AnnotationWrapper aw : annotations){
+                annotationTrees.add((JCAnnotation)aw.getData());
+            }
+            expr = com.sun.tools.javac.util.List.from(annotationTrees);
         }
-        return treeMaker.Modifiers(getModifierFlag(modifiers), expr);
+        return ModifiersWrapper.from(treeMaker.Modifiers(getModifierFlag(modifiers), expr));
     }
 
     @Override
-    public VariableTree createVariable(VariableElement variableElement, ExpressionTree init) {
-        return treeMaker.VarDef((Symbol.VarSymbol)variableElement, (JCExpression)init);
+    public VariableWrapper<VariableTree> createVariable(VariableElement variableElement, ExpressionWrapper init) {
+        return VariableWrapper.from(treeMaker.VarDef((Symbol.VarSymbol)variableElement, init==null?null:(JCExpression)init.getData()));
     }
 
     @Override
-    public MethodInvocationTree createMethodInvocation(ExpressionTree methodExpr, List<ExpressionTree> args) {
+    public MethodInvocationWrapper<MethodInvocationTree> createMethodInvocation(ExpressionWrapper methodExpr, List<ExpressionWrapper> args) {
         com.sun.tools.javac.util.List<JCExpression> expr;
         if(args != null){
-            expr = com.sun.tools.javac.util.List.convert(JCExpression.class, com.sun.tools.javac.util.List.from(args));
+            List<JCExpression> exprList = new LinkedList<JCExpression>();
+            for(ExpressionWrapper ew : args){
+                exprList.add((JCExpression) ew.getData());
+            }
+            expr = com.sun.tools.javac.util.List.from(exprList);
         }else{
             expr = com.sun.tools.javac.util.List.nil();
         }
-        return treeMaker.Apply(com.sun.tools.javac.util.List.nil(), (JCExpression)methodExpr, expr);
+
+        return MethodInvocationWrapper.from(treeMaker.Apply(com.sun.tools.javac.util.List.<JCExpression>nil(), methodExpr==null?null:(JCExpression)methodExpr.getData(), expr));
     }
 
     @Override
-    public ReturnTree createReturn(ExpressionTree expr) {
-        return treeMaker.Return((JCExpression) expr);
+    public ReturnWrapper<ReturnTree> createReturn(ExpressionWrapper expr) {
+        return ReturnWrapper.from(treeMaker.Return(expr==null?null:(JCExpression) expr.getData()));
     }
 
     @Override
-    public IfTree createIf(ExpressionTree condExpr, StatementTree thenExpr, StatementTree elseExpr) {
-        return treeMaker.If((JCExpression)condExpr, (JCStatement) thenExpr, (JCStatement)elseExpr);
+    public IfWrapper<IfTree> createIf(ExpressionWrapper condExpr, StatementWrapper thenExpr, StatementWrapper elseExpr) {
+        return IfWrapper.from(treeMaker.If(condExpr==null?null:(JCExpression)condExpr.getData(), thenExpr==null?null:(JCStatement)thenExpr.getData(), elseExpr==null?null:(JCStatement)elseExpr.getData()));
     }
 
     private Tag toTag(BinaryOperator binaryOperator){
@@ -166,13 +158,8 @@ class AnnotationProcessorToolImpl implements AnnotationProcessorTool {
     }
 
     @Override
-    public BinaryTree createBinaryOperation(ExpressionTree leftExpr, ExpressionTree rightExpr, BinaryOperator binaryOperator) {
-        return treeMaker.Binary(toTag(binaryOperator), (JCExpression)leftExpr, (JCExpression)rightExpr);
-    }
-
-    @Override
-    public TypeMirror createPrimitiveType(TypeKind kind) {
-        return types.getPrimitiveType(kind);
+    public BinaryWrapper<BinaryTree> createBinaryOperation(ExpressionWrapper leftExpr, ExpressionWrapper rightExpr, BinaryOperator binaryOperator) {
+        return BinaryWrapper.from(treeMaker.Binary(toTag(binaryOperator), leftExpr==null?null:(JCExpression)leftExpr.getData(), rightExpr==null?null:(JCExpression)rightExpr.getData()));
     }
 
     @Override
@@ -188,10 +175,10 @@ class AnnotationProcessorToolImpl implements AnnotationProcessorTool {
     }
 
     @Override
-    public MethodTree createMethod(List<AnnotationTree> annotations, ExecutableElement method, BlockTree block) {
-        JCTree.JCMethodDecl jcMethodDecl = treeMaker.MethodDef((Symbol.MethodSymbol)method,(JCBlock)block);
-        jcMethodDecl.mods = (JCModifiers)createModifier(annotations, method.getModifiers());
-        return jcMethodDecl;
+    public MethodWrapper<MethodTree> createMethod(List<AnnotationWrapper> annotations, ExecutableElement method, BlockWrapper block) {
+        JCTree.JCMethodDecl jcMethodDecl = treeMaker.MethodDef((Symbol.MethodSymbol)method,block==null?null:(JCBlock)block.getData());
+        jcMethodDecl.mods = (JCModifiers)createModifier(annotations, method.getModifiers()).getData();
+        return MethodWrapper.from(jcMethodDecl);
     }
 
     @Override
@@ -223,47 +210,46 @@ class AnnotationProcessorToolImpl implements AnnotationProcessorTool {
     }
 
     @Override
-    public BlockTree createBlock(Set<Modifier> modifiers, List<StatementTree> statements) {
+    public BlockWrapper<BlockTree> createBlock(Set<Modifier> modifiers, List<StatementWrapper> statements) {
         if(statements == null){
             throw new IllegalArgumentException();
         }
-        return treeMaker.Block(getModifierFlag(modifiers),com.sun.tools.javac.util.List.convert(JCStatement.class, com.sun.tools.javac.util.List.from(statements)));
+        List<JCStatement> statementList = new LinkedList<JCStatement>();
+        for(StatementWrapper sw : statements){
+            statementList.add((JCStatement)sw.getData());
+        }
+
+        return BlockWrapper.from(treeMaker.Block(getModifierFlag(modifiers),com.sun.tools.javac.util.List.from(statementList)));
     }
 
     @Override
-    public ExpressionTree createMemberSelect(String fullPath) {
+    public ExpressionWrapper<ExpressionTree> createMemberSelect(String fullPath) {
         String[] stringSplitAsDelimiter = fullPath.split("\\.");
         JCExpression member = treeMaker.Ident(name(stringSplitAsDelimiter[0]));
         for(int i=1; i<stringSplitAsDelimiter.length; i++){
             member = treeMaker.Select(member,name(stringSplitAsDelimiter[i]));
         }
-        return member;
+        return ExpressionWrapper.from(member);
     }
 
     @Override
-    public ExpressionTree createMemberSelect(ExpressionTree start, String fullPath) {
-        JCExpression member = (JCExpression)start;
+    public ExpressionWrapper<ExpressionTree> createMemberSelect(ExpressionWrapper start, String fullPath) {
+        JCExpression member = start==null?null:(JCExpression)start.getData();
         for (String s : fullPath.split("\\.")) {
             member = treeMaker.Select(member, name(s));
         }
-        return member;
+        return ExpressionWrapper.from(member);
     }
 
     @Override
-    public AssignmentTree createAssignment(ExpressionTree target, ExpressionTree value) {
-        return null;
+    public LiteralWrapper<LiteralTree> createLiteral(Object obj) {
+        return LiteralWrapper.from(treeMaker.Literal(obj));
     }
 
     @Override
-    public LiteralTree createLiteral(Object obj) {
-        return treeMaker.Literal(obj);
+    public AnnotationWrapper<AnnotationTree> createOverrideAnnotation() {
+        return AnnotationWrapper.from(treeMaker.Annotation(new Attribute.Compound((Type)createTypeElement(Override.class).asType(), com.sun.tools.javac.util.List.<Pair<Symbol.MethodSymbol, Attribute>>nil())));
     }
-
-    @Override
-    public AnnotationTree createOverrideAnnotation() {
-        return treeMaker.Annotation(new Attribute.Compound((Type)createTypeElement(Override.class).asType(), com.sun.tools.javac.util.List.nil()));
-    }
-
 
     private long getModifierFlag(Set<Modifier> modifiers){
         long result = 0;
@@ -274,9 +260,6 @@ class AnnotationProcessorToolImpl implements AnnotationProcessorTool {
             switch(m){
                 case ABSTRACT:
                     result |= Flags.ABSTRACT;
-                    break;
-                case DEFAULT:
-                    result |= Flags.DEFAULT;
                     break;
                 case FINAL:
                     result |= Flags.FINAL;
@@ -314,18 +297,8 @@ class AnnotationProcessorToolImpl implements AnnotationProcessorTool {
     }
 
     @Override
-    public boolean isSameType(TypeMirror t1, TypeMirror t2) {
-        return types.isSameType(t1,t2);
-    }
-
-    @Override
-    public boolean isSubtype(TypeMirror t1, TypeMirror t2) {
-        return types.isSubtype(t1,t2);
-    }
-
-    @Override
-    public ClassTree injectImport(CompilationUnitTree compilationUnitTree, ImportTree importTree) {
-        JCCompilationUnit jcCompilationUnit = (JCCompilationUnit)compilationUnitTree;
+    public ClassWrapper<ClassTree> injectImport(CompilationUnitWrapper compilationUnitWrapper, ImportWrapper importWrapper) {
+        JCCompilationUnit jcCompilationUnit = (JCCompilationUnit)compilationUnitWrapper.getData();
         LinkedList<JCTree> defsTmp = new LinkedList<>();
 
         JCPackageDecl packageDecl = null;
@@ -345,13 +318,13 @@ class AnnotationProcessorToolImpl implements AnnotationProcessorTool {
         if(jcClassDecl == null){
             throw new IllegalArgumentException();
         }
-        defsTmp.addFirst((JCTree)importTree);
+        defsTmp.addFirst(importWrapper==null?null:(JCTree)importWrapper.getData());
         defsTmp.addFirst(packageDecl);
         defsTmp.addLast(jcClassDecl);
         com.sun.tools.javac.util.List<JCTree> defs = com.sun.tools.javac.util.List.from(defsTmp);
         jcCompilationUnit.defs = null;
         jcCompilationUnit.defs = defs;
-        return jcClassDecl;
+        return ClassWrapper.from(jcClassDecl);
     }
 
     private JCExpression createIdentWithGenerics(TypeElement infType, List<TypeElement> genericTypes) {
@@ -368,13 +341,13 @@ class AnnotationProcessorToolImpl implements AnnotationProcessorTool {
     }
 
     @Override
-    public void injectInterface(ClassTree classTree, TypeElement infType) {
-        injectInterface(classTree,infType, null);
+    public void injectInterface(ClassWrapper classWrapper, TypeElement infType) {
+        injectInterface(classWrapper, infType, null);
     }
 
     @Override
-    public void injectInterface(ClassTree classTree, TypeElement infType, List<TypeElement> genericTypes) {
-        injectInterface((JCClassDecl)classTree,infType, genericTypes);
+    public void injectInterface(ClassWrapper classWrapper, TypeElement infType, List<TypeElement> genericTypes) {
+        injectInterface((JCClassDecl)classWrapper.getData(),infType, genericTypes);
     }
 
     private void injectInterface(JCClassDecl jcClassDecl, TypeElement infType, List<TypeElement> genericTypes){
@@ -401,21 +374,26 @@ class AnnotationProcessorToolImpl implements AnnotationProcessorTool {
     }
 
     @Override
-    public void injectMethod(ClassTree classTree, MethodTree methodTree) {
-        JCClassDecl jcClassDecl = (JCClassDecl) classTree;
-        jcClassDecl.defs = jcClassDecl.defs.append((JCTree) methodTree);
+    public void injectMethod(ClassWrapper classWrapper, MethodWrapper methodWrapper) {
+        JCClassDecl jcClassDecl = (JCClassDecl)classWrapper.getData();
+        jcClassDecl.defs = jcClassDecl.defs.append((JCTree)methodWrapper.getData());
     }
 
     @Override
-    public ClassTree extractTree(CompilationUnitTree compilationUnit) {
-        List<? extends Tree> list = compilationUnit.getTypeDecls();
+    public ClassWrapper<ClassTree> extractClass(CompilationUnitWrapper compilationUnitWrapper) {
+        List<? extends Tree> list = ((CompilationUnitTree)compilationUnitWrapper.getData()).getTypeDecls();
         Tree tree = list.get(list.size()-1);
-        return (ClassTree)tree;
+        return ClassWrapper.from((ClassTree)tree);
     }
 
     @Override
-    public TypeElement extractTypeElement(ClassTree classTree) {
-        return ((JCClassDecl)classTree).sym;
+    public CompilationUnitWrapper extractCompilationUnit(TypeElement typeElement) {
+        return CompilationUnitWrapper.from(trees.getPath(typeElement).getCompilationUnit());
+    }
+
+    @Override
+    public TypeElement extractTypeElement(ClassWrapper classWrapper) {
+        return ((JCClassDecl)classWrapper.getData()).sym;
     }
 
 

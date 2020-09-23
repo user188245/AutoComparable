@@ -1,11 +1,9 @@
 package auto.autocomparable.mock;
 
 
-import auto.autocomparable.annotation.AutoComparable;
-
 import java.util.Objects;
 
-@AutoComparable(isLowPriorityFirst = false)
+//@AutoComparable(isLowPriorityFirst = false)
 public class AutoComparableTargetMissingMockClass {
     int field1;
 

@@ -4,7 +4,7 @@ import auto.autocomparable.annotation.Order;
 import auto.util.AnnotationProcessorTool;
 import auto.util.BinaryOperator;
 import auto.util.MethodGenerator;
-import com.sun.source.tree.*;
+import auto.util.wrapper.*;
 
 import javax.lang.model.element.ExecutableElement;
 import javax.lang.model.element.Modifier;
@@ -32,7 +32,7 @@ class CompareToMethodGenerator implements MethodGenerator {
         if(priorityOrder == Order.DESC){
             Collections.sort(targets);
         }else{
-            targets.sort(Collections.reverseOrder());
+            Collections.sort(targets,Collections.<ComparableTarget>reverseOrder());
         }
         this.apt = annotationProcessorTool;
         this.self = self;
@@ -40,7 +40,7 @@ class CompareToMethodGenerator implements MethodGenerator {
     }
 
     @Override
-    public MethodTree generateMethod() {
+    public MethodWrapper generateMethod() {
         List<VariableElement> paramVars = new LinkedList<>();
         paramVars.add(apt.createParameterElement(self.asType(), paramName, self));
 
@@ -52,19 +52,19 @@ class CompareToMethodGenerator implements MethodGenerator {
                 null,
                 self);
 
-        List<StatementTree> body = null;
+        List<StatementWrapper> body = null;
         int i = 0;
         for(ComparableTarget target : targets){
 
             //base
             String varName = baseVar + i++;
-            ExpressionTree var = apt.createMemberSelect(varName);
+            ExpressionWrapper var = apt.createMemberSelect(varName);
 
             // init
-            VariableTree assignment = generateAssignment(varName,target); // v# = compare(this.?, o.?); or v# = this.?.compareTo(o.?);
+            VariableWrapper assignment = generateAssignment(varName,target); // v# = compare(this.?, o.?); or v# = this.?.compareTo(o.?);
 
             // if
-            IfTree ift = null;
+            IfWrapper ift = null;
             if(body != null){
                 ift = apt.createIf(
                     apt.createBinaryOperation(var,apt.createLiteral(0),
@@ -75,7 +75,7 @@ class CompareToMethodGenerator implements MethodGenerator {
             body = new LinkedList<>();
 
             // return
-            ReturnTree rtn = apt.createReturn(var); // return v#;
+            ReturnWrapper rtn = apt.createReturn(var); // return v#;
 
             // body creation
             body.add(assignment);
@@ -84,24 +84,24 @@ class CompareToMethodGenerator implements MethodGenerator {
             }
             body.add(rtn);
         }
-        BlockTree block = apt.createBlock(null, body);
-        List<AnnotationTree> annotations = new LinkedList<>();
+        BlockWrapper block = apt.createBlock(null, body);
+        List<AnnotationWrapper> annotations = new LinkedList<>();
         annotations.add(apt.createOverrideAnnotation());
         return apt.createMethod(annotations, methodPrototype, block);
     }
 
-    private VariableTree generateAssignment(String variable, ComparableTarget comparableTarget){
-        ExpressionTree methodCall = generateMethodCall(comparableTarget);
+    private VariableWrapper generateAssignment(String variable, ComparableTarget comparableTarget){
+        ExpressionWrapper methodCall = generateMethodCall(comparableTarget);
         VariableElement variableElement = apt.createVariableElement(null,intType, variable, null);
         return apt.createVariable(variableElement, methodCall);
     }
 
-    private MethodInvocationTree generateMethodCall(ComparableTarget comparableTarget){
+    private MethodInvocationWrapper generateMethodCall(ComparableTarget comparableTarget){
 
         StringBuilder targetAccess = new StringBuilder(comparableTarget.getCompareTarget());
 
-        ExpressionTree left;
-        ExpressionTree right;
+        ExpressionWrapper left;
+        ExpressionWrapper right;
 
 
         if(comparableTarget.getOrder() == Order.DESC){
@@ -119,8 +119,8 @@ class CompareToMethodGenerator implements MethodGenerator {
 
 
 
-        ExpressionTree methodSelect;
-        List<ExpressionTree> params = new LinkedList<>();
+        ExpressionWrapper methodSelect;
+        List<ExpressionWrapper> params = new LinkedList<>();
         if(comparableTarget.getMethodType() == ComparableTarget.MethodType.Compare){
             params.add(left);
             params.add(right);

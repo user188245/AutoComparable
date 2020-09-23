@@ -1,8 +1,8 @@
 package auto.util;
 
-import com.sun.source.tree.ClassTree;
-import com.sun.source.tree.CompilationUnitTree;
-import com.sun.source.tree.ImportTree;
+import auto.util.wrapper.ClassWrapper;
+import auto.util.wrapper.CompilationUnitWrapper;
+import auto.util.wrapper.ImportWrapper;
 
 import javax.lang.model.element.TypeElement;
 import javax.lang.model.type.TypeMirror;
@@ -14,7 +14,7 @@ public abstract class InterfaceInjector implements CompilationUnitProcessor {
     private Class<?> inf;
     private Field[] fields;
     TypeElement infType;
-    private TreePositionCorrector treePositionCorrector;
+    private ASTPositionCorrector ASTPositionCorrector;
 
     public InterfaceInjector(Class<?> inf, AnnotationProcessorTool annotationProcessorTool) throws IllegalArgumentException{
         setAnnotationProcessorTool(annotationProcessorTool);
@@ -24,7 +24,7 @@ public abstract class InterfaceInjector implements CompilationUnitProcessor {
         this.inf = inf;
         this.fields = inf.getFields();
         this.infType = annotationProcessorTool.createTypeElement(inf);
-        this.treePositionCorrector = TreePositionCorrectorFactory.instance();
+        this.ASTPositionCorrector = ASTPositionCorrectorFactory.instance(annotationProcessorTool);
     }
 
     public void setAnnotationProcessorTool(AnnotationProcessorTool annotationProcessorTool) {
@@ -40,25 +40,25 @@ public abstract class InterfaceInjector implements CompilationUnitProcessor {
     }
 
     @Override
-    public CompilationUnitTree process(CompilationUnitTree compilationUnit) {
-        ClassTree classTree = injectImportAndGetClass(compilationUnit);
-        TypeElement te = annotationProcessorTool.extractTypeElement(classTree);
+    public CompilationUnitWrapper process(CompilationUnitWrapper compilationUnit) {
+        ClassWrapper classWrapper = injectImportAndGetClass(compilationUnit);
+        TypeElement te = annotationProcessorTool.extractTypeElement(classWrapper);
         if(containsInterfaceDuplication(te)){
             throw new IllegalArgumentException();
         }
-        injectInterface(classTree);
-        processAfterInterfaceInjection(classTree);
-        treePositionCorrector.correctPosition(classTree);
+        injectInterface(classWrapper);
+        processAfterInterfaceInjection(classWrapper);
+        ASTPositionCorrector.correctPosition(classWrapper);
         return compilationUnit;
     }
 
-    private ClassTree injectImportAndGetClass(CompilationUnitTree compilationUnit){
-        ImportTree importTree = annotationProcessorTool.createImport(infType);
-        return annotationProcessorTool.injectImport(compilationUnit,importTree);
+    private ClassWrapper injectImportAndGetClass(CompilationUnitWrapper compilationUnit){
+        ImportWrapper importWrapper = annotationProcessorTool.createImport(infType);
+        return annotationProcessorTool.injectImport(compilationUnit,importWrapper);
     }
 
-    protected void injectInterface(ClassTree classTree){
-        annotationProcessorTool.injectInterface(classTree, infType);
+    protected void injectInterface(ClassWrapper classWrapper){
+        annotationProcessorTool.injectInterface(classWrapper, infType);
     }
 
     protected TypeMirror getInfTypeMirror(TypeElement self){
@@ -75,5 +75,5 @@ public abstract class InterfaceInjector implements CompilationUnitProcessor {
         return false;
     }
 
-    abstract protected void processAfterInterfaceInjection(ClassTree classTree);
+    abstract protected void processAfterInterfaceInjection(ClassWrapper classWrapper);
 }

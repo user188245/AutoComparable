@@ -1,8 +1,7 @@
 package auto.util;
 
-import com.sun.source.tree.*;
+import auto.util.wrapper.*;
 
-import javax.annotation.processing.ProcessingEnvironment;
 import javax.lang.model.element.ExecutableElement;
 import javax.lang.model.element.Modifier;
 import javax.lang.model.element.TypeElement;
@@ -12,11 +11,7 @@ import javax.lang.model.type.TypeMirror;
 import java.util.List;
 import java.util.Set;
 
-//todo
 public interface AnnotationProcessorTool {
-
-    ProcessingEnvironment getProcessingEnvironment();
-
 
     // creation
 
@@ -28,40 +23,37 @@ public interface AnnotationProcessorTool {
 
     VariableElement createParameterElement(TypeMirror varType, String varName, TypeElement from);
 
-    ImportTree createImport(TypeElement e);
+    ImportWrapper createImport(TypeElement e);
 
-    ModifiersTree createModifier(List<AnnotationTree> annotations, Set<Modifier> modifiers);
+    ModifiersWrapper createModifier(List<AnnotationWrapper> annotations, Set<Modifier> modifiers);
 
-    VariableTree createVariable(VariableElement variableElement, ExpressionTree init);
+    VariableWrapper createVariable(VariableElement variableElement, ExpressionWrapper init);
 
-    MethodInvocationTree createMethodInvocation(ExpressionTree methodExpr, List<ExpressionTree> args);
+    MethodInvocationWrapper createMethodInvocation(ExpressionWrapper methodExpr, List<ExpressionWrapper> args);
 
-    ReturnTree createReturn(ExpressionTree expr);
+    ReturnWrapper createReturn(ExpressionWrapper expr);
 
-    IfTree createIf(ExpressionTree condExpr, StatementTree thenExpr, StatementTree elseExpr);
+    IfWrapper createIf(ExpressionWrapper condExpr, StatementWrapper thenExpr, StatementWrapper elseExpr);
 
-    BinaryTree createBinaryOperation(ExpressionTree leftExpr, ExpressionTree rightExpr, BinaryOperator binaryOperator);
+    BinaryWrapper createBinaryOperation(ExpressionWrapper leftExpr, ExpressionWrapper rightExpr, BinaryOperator binaryOperator);
 
     TypeMirror createPrimitiveType(TypeKind kind);
 
     TypeMirror createGenericTypeMirror(TypeMirror prototype, List<TypeMirror> genericsTypes);
 
-    MethodTree createMethod(List<AnnotationTree> annotations, ExecutableElement method, BlockTree block);
+    MethodWrapper createMethod(List<AnnotationWrapper> annotations, ExecutableElement method, BlockWrapper block);
 
     ExecutableElement createMethodPrototype(Set<Modifier> modifiers, String name, TypeMirror returnType, List<VariableElement> params, List<TypeMirror> thrown, TypeElement from);
 
-    BlockTree createBlock(Set<Modifier> modifiers, List<StatementTree> statements);
+    BlockWrapper createBlock(Set<Modifier> modifiers, List<StatementWrapper> statements);
 
-    ExpressionTree createMemberSelect(String fullPath);
+    ExpressionWrapper createMemberSelect(String fullPath);
 
-    ExpressionTree createMemberSelect(ExpressionTree start, String fullPath);
+    ExpressionWrapper createMemberSelect(ExpressionWrapper start, String fullPath);
 
-    AssignmentTree createAssignment(ExpressionTree target, ExpressionTree value);
+    LiteralWrapper createLiteral(Object obj);
 
-    LiteralTree createLiteral(Object obj);
-
-
-    AnnotationTree createOverrideAnnotation();
+    AnnotationWrapper createOverrideAnnotation();
 
 
     //verify
@@ -72,18 +64,20 @@ public interface AnnotationProcessorTool {
 
     // injection
 
-    ClassTree injectImport(CompilationUnitTree compilationUnitTree, ImportTree importTree);
+    ClassWrapper injectImport(CompilationUnitWrapper compilationUnitWrapper, ImportWrapper importWrapper);
 
-    void injectInterface(ClassTree classTree, TypeElement infType);
+    void injectInterface(ClassWrapper classWrapper, TypeElement infType);
 
-    void injectInterface(ClassTree classTree, TypeElement infType, List<TypeElement> genericTypes);
+    void injectInterface(ClassWrapper classWrapper, TypeElement infType, List<TypeElement> genericTypes);
 
-    void injectMethod(ClassTree classTree, MethodTree methodTree);
+    void injectMethod(ClassWrapper classWrapper, MethodWrapper methodWrapper);
 
     // extraction
 
-    ClassTree extractTree(CompilationUnitTree compilationUnit);
+    ClassWrapper extractClass(CompilationUnitWrapper compilationUnitWrapper);
 
-    TypeElement extractTypeElement(ClassTree classTree);
+    CompilationUnitWrapper extractCompilationUnit(TypeElement typeElement);
+
+    TypeElement extractTypeElement(ClassWrapper classWrapper);
 
 }
