@@ -1,7 +1,7 @@
 package auto.util.wrapper;
 
 import com.sun.source.tree.MethodInvocationTree;
-import org.eclipse.jdt.internal.compiler.ast.FieldReference;
+import org.eclipse.jdt.internal.compiler.ast.MessageSend;
 
 public class MethodInvocationWrapper<T> extends ExpressionWrapper<T> {
 
@@ -13,7 +13,7 @@ public class MethodInvocationWrapper<T> extends ExpressionWrapper<T> {
         return new MethodInvocationWrapper<MethodInvocationTree>(data);
     }
 
-    public static MethodInvocationWrapper<FieldReference> from(FieldReference data){
-        return new MethodInvocationWrapper<FieldReference>(data);
+    public static MethodInvocationWrapper<MessageSend> from(MessageSend data){
+        return new MethodInvocationWrapper<MessageSend>(data);
     }
 }

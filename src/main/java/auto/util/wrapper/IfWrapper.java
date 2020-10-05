@@ -1,7 +1,7 @@
 package auto.util.wrapper;
 
 import com.sun.source.tree.IfTree;
-import sun.tools.tree.IfStatement;
+import org.eclipse.jdt.internal.compiler.ast.IfStatement;
 
 public class IfWrapper<T> extends StatementWrapper<T> {
 
