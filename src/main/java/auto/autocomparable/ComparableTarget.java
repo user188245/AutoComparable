@@ -10,8 +10,8 @@ class ComparableTarget implements Comparable<ComparableTarget>{
     }
 
     enum MethodType{
-        CompareTo,
-        Compare
+        compareTo,
+        compare
     }
 
     private Kind kind;
@@ -19,7 +19,8 @@ class ComparableTarget implements Comparable<ComparableTarget>{
     private int priority;
     private Order order;
     private String compareTarget;
-    private String compareMethod;
+    private String compareReceiver;
+    private String compareSelector;
 
     Kind getKind() {
         return kind;
@@ -37,17 +38,27 @@ class ComparableTarget implements Comparable<ComparableTarget>{
         return compareTarget;
     }
 
-    String getCompareMethod() {
-        return compareMethod;
+    String getCompareReceiver() {
+        return compareReceiver;
     }
 
-    ComparableTarget(Kind kind, MethodType methodType, int priority, Order order, String compareTarget, String compareMethod) {
+    String getCompareSelector() {
+        return compareSelector;
+    }
+
+    ComparableTarget(Kind kind, MethodType methodType, int priority, Order order, String compareTarget, String compareReceiver, String compareSelector) {
         this.kind = kind;
         this.methodType = methodType;
         this.priority = priority;
         this.order = order;
         this.compareTarget = compareTarget;
-        this.compareMethod = compareMethod;
+        this.compareReceiver = compareReceiver;
+        if(compareSelector != null){
+            this.compareSelector = compareSelector;
+        }else{
+            this.compareSelector = methodType.name();
+        }
+
     }
 
     @Override

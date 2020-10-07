@@ -5,7 +5,6 @@ import auto.util.wrapper.ClassWrapper;
 import javax.lang.model.element.TypeElement;
 import javax.lang.model.type.TypeMirror;
 import java.util.ArrayList;
-import java.util.LinkedList;
 import java.util.List;
 
 public abstract class InterfaceWithGenericTypeInjector extends InterfaceInjector{
@@ -40,13 +39,14 @@ public abstract class InterfaceWithGenericTypeInjector extends InterfaceInjector
 
     @Override
     protected TypeMirror getInfTypeMirror(TypeElement self) {
-        TypeMirror typeMirror = infType.asType();
+//        TypeMirror typeMirror = infType.asType();
         List<TypeElement> genericsTypeElementsWithSubstitute = createGenericTypeElementsWithSubstitute(genericTypeElements,self);
-        List<TypeMirror> genericsTypeMirrors = new LinkedList<>();
+        TypeMirror[] genericsTypeMirrors = new TypeMirror[genericsTypeElementsWithSubstitute.size()];
+        int i = 0;
         for(TypeElement x : genericsTypeElementsWithSubstitute){
-            genericsTypeMirrors.add(x.asType());
+            genericsTypeMirrors[i++] = x.asType();
         }
-        return annotationProcessorTool.createGenericTypeMirror(typeMirror,genericsTypeMirrors);
+        return annotationProcessorTool.createGenericTypeMirror(infType,genericsTypeMirrors);
     }
 
     @Override

@@ -2,7 +2,7 @@ package auto.util;
 
 import auto.util.wrapper.*;
 
-import javax.lang.model.element.ExecutableElement;
+import javax.lang.model.element.Element;
 import javax.lang.model.element.Modifier;
 import javax.lang.model.element.TypeElement;
 import javax.lang.model.element.VariableElement;
@@ -17,7 +17,7 @@ public interface AnnotationProcessorTool {
 
     TypeElement createTypeElement(Class<?> cls);
 
-    TypeMirror createPureType(TypeMirror typeWithGenerics);
+    TypeMirror createRawType(TypeMirror typeWithGenerics);
 
     VariableElement createVariableElement(Set<Modifier> modifiers, TypeMirror varType, String varName, TypeElement from);
 
@@ -25,11 +25,9 @@ public interface AnnotationProcessorTool {
 
     ImportWrapper createImport(TypeElement e);
 
-    ModifiersWrapper createModifier(List<AnnotationWrapper> annotations, Set<Modifier> modifiers);
-
     VariableWrapper createVariable(VariableElement variableElement, ExpressionWrapper init);
 
-    MethodInvocationWrapper createMethodInvocation(ExpressionWrapper methodExpr, List<ExpressionWrapper> args);
+    MethodInvocationWrapper createMethodInvocation(ExpressionWrapper receiver, String selector, List<ExpressionWrapper> args);
 
     ReturnWrapper createReturn(ExpressionWrapper expr);
 
@@ -39,11 +37,9 @@ public interface AnnotationProcessorTool {
 
     TypeMirror createPrimitiveType(TypeKind kind);
 
-    TypeMirror createGenericTypeMirror(TypeMirror prototype, List<TypeMirror> genericsTypes);
+    TypeMirror createGenericTypeMirror(TypeElement prototype, TypeMirror... genericsTypes);
 
-    MethodWrapper createMethod(List<AnnotationWrapper> annotations, ExecutableElement method, BlockWrapper block);
-
-    ExecutableElement createMethodPrototype(Set<Modifier> modifiers, String name, TypeMirror returnType, List<VariableElement> params, List<TypeMirror> thrown, TypeElement from);
+    MethodWrapper createMethod(List<AnnotationWrapper> annotations, Set<Modifier> modifiers, String name, TypeMirror returnType, List<VariableElement> params, List<TypeMirror> thrown, BlockWrapper block, TypeElement from);
 
     BlockWrapper createBlock(Set<Modifier> modifiers, List<StatementWrapper> statements);
 
@@ -80,4 +76,7 @@ public interface AnnotationProcessorTool {
 
     TypeElement extractTypeElement(ClassWrapper classWrapper);
 
+    // convert
+
+    Element asElement(TypeMirror tm);
 }

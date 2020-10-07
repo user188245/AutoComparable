@@ -1,6 +1,7 @@
 package auto.util;
 
 import javax.annotation.processing.ProcessingEnvironment;
+import javax.lang.model.element.Element;
 import javax.lang.model.element.TypeElement;
 import javax.lang.model.type.TypeKind;
 import javax.lang.model.type.TypeMirror;
@@ -33,8 +34,23 @@ abstract class AbstractAnnotationProcessorTool implements AnnotationProcessorToo
     }
 
     @Override
+    public TypeMirror createRawType(TypeMirror typeWithGenerics){
+        return types.erasure(typeWithGenerics);
+    }
+
+    @Override
     public TypeMirror createPrimitiveType(TypeKind kind) {
         return types.getPrimitiveType(kind);
+    }
+
+    @Override
+    public TypeMirror createGenericTypeMirror(TypeElement prototype, TypeMirror... genericsTypes) {
+        return types.getDeclaredType(prototype, genericsTypes);
+    }
+
+    @Override
+    public Element asElement(TypeMirror tm){
+        return types.asElement(tm);
     }
 
 }

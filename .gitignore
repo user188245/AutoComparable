@@ -37,3 +37,5 @@ hs_err_pid*
 *.iml
 *.ipr
 /out/
+/.gradle/
+/build/

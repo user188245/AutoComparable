@@ -24,7 +24,7 @@ public class ComparableInjector extends InterfaceWithGenericTypeInjector {
     public ComparableInjector(AnnotationProcessorTool annotationProcessorTool){
         super(Comparable.class, ComparableInjector.createGenericTypes(), annotationProcessorTool);
         if(comparableType == null){
-            comparableType = annotationProcessorTool.createPureType(annotationProcessorTool.createTypeElement(getInterface()).asType());
+            comparableType = annotationProcessorTool.createRawType(annotationProcessorTool.createTypeElement(getInterface()).asType());
         }
     }
 
@@ -34,24 +34,24 @@ public class ComparableInjector extends InterfaceWithGenericTypeInjector {
         return genericTypes;
     }
 
-    private static String getPrimitiveCompareMethod(TypeMirror type){
+    private static String getPrimitiveCompareReceiver(TypeMirror type){
         switch(type.getKind()){
             case INT:
-                return "Integer.compare";
+                return "Integer";
             case LONG:
-                return "Long.compare";
+                return "Long";
             case SHORT:
-                return "Short.compare";
+                return "Short";
             case BYTE:
-                return "Byte.compare";
+                return "Byte";
             case CHAR:
-                return "Character.compare";
+                return "Character";
             case BOOLEAN:
-                return "Boolean.compare";
+                return "Boolean";
             case FLOAT:
-                return "Float.compare";
+                return "Float";
             case DOUBLE:
-                return "Double.compare";
+                return "Double";
             default:
                 return null;
         }
@@ -62,7 +62,7 @@ public class ComparableInjector extends InterfaceWithGenericTypeInjector {
             throw new IllegalArgumentException();
         }
         ComparableTarget.Kind kind = ComparableTarget.Kind.Field;
-        ComparableTarget.MethodType type = ComparableTarget.MethodType.Compare;
+        ComparableTarget.MethodType type = ComparableTarget.MethodType.compare;
         TypeMirror compareTargetType;
         String compareTargetName;
         if(e instanceof ExecutableElement){
@@ -77,21 +77,31 @@ public class ComparableInjector extends InterfaceWithGenericTypeInjector {
         }
         compareTargetName = e.getSimpleName().toString();
 
-        String compareMethod;
+        String compareReceiver = null;
+        String compareSelector = null;
 
         String alternativeMethodName = autoComparableTarget.alternativeCompareMethod();
         if(!alternativeMethodName.equals("")){
-            compareMethod = alternativeMethodName;
+            int dot = alternativeMethodName.lastIndexOf('.');
+            if(dot == -1){
+                compareSelector = alternativeMethodName;
+            }else{
+                //todo
+                // find a direct accessible method
+                compareReceiver = alternativeMethodName.substring(0,dot);
+                compareSelector = alternativeMethodName.substring(dot+1);
+            }
         }else{
-             compareMethod = getPrimitiveCompareMethod(compareTargetType);
-            if(compareMethod == null){
-                if(!annotationProcessorTool.isSubtype(compareTargetType,comparableType) && e.getAnnotation(AutoComparable.class) == null){
-                    // it is nether primitive nor Comparable nor AutoComparable.
-                    throw new IllegalArgumentException();
-                }
+            compareReceiver = getPrimitiveCompareReceiver(compareTargetType);
+            if(compareReceiver == null){
+                //todo
+                // fix the if statement in order that 'getAnnotation' function works well
+//                if(!annotationProcessorTool.isSubtype(compareTargetType,comparableType) && e.getAnnotation(AutoComparable.class) == null){
+//                    // it is nether primitive nor Comparable nor AutoComparable.
+//                    throw new IllegalArgumentException();
+//                }
                 // compareTarget has the method "compareTo"
-                type = ComparableTarget.MethodType.CompareTo;
-                compareMethod = "compareTo";
+                type = ComparableTarget.MethodType.compareTo;
             }
         }
         return new ComparableTarget(
@@ -100,7 +110,8 @@ public class ComparableInjector extends InterfaceWithGenericTypeInjector {
                 autoComparableTarget.priority(),
                 autoComparableTarget.order(),
                 compareTargetName,
-                compareMethod);
+                compareReceiver,
+                compareSelector);
     }
 
     @Override
@@ -137,9 +148,9 @@ public class ComparableInjector extends InterfaceWithGenericTypeInjector {
                 // 7. Collect All @AutoComparableTarget Members. Build List<ComparableTarget>
                 fields.add(ct);
             }
-            if(fields.isEmpty()){
-                throw new IllegalArgumentException();
-            }
+        }
+        if(fields.isEmpty()){
+            throw new IllegalArgumentException();
         }
         MethodGenerator methodGenerator = new CompareToMethodGenerator(fields,(autoComparable.isLowPriorityFirst())? Order.ASC:Order.DESC,annotationProcessorTool, cls);
         // 8. Generate CompareTo method by using CompareToMethodGenerator.

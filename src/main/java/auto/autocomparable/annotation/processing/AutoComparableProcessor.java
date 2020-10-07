@@ -39,6 +39,7 @@ public class AutoComparableProcessor extends AbstractProcessor {
 
     @Override
     public boolean process(Set<? extends TypeElement> annotations, RoundEnvironment roundEnv) {
+
         for(Element e : roundEnv.getElementsAnnotatedWith(AutoComparable.class)){
             try{
                 comparableInjector.process(apt.extractCompilationUnit((TypeElement)e));

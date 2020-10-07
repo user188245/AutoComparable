@@ -6,7 +6,6 @@ import auto.util.BinaryOperator;
 import auto.util.MethodGenerator;
 import auto.util.wrapper.*;
 
-import javax.lang.model.element.ExecutableElement;
 import javax.lang.model.element.Modifier;
 import javax.lang.model.element.TypeElement;
 import javax.lang.model.element.VariableElement;
@@ -22,6 +21,8 @@ class CompareToMethodGenerator implements MethodGenerator {
     private AnnotationProcessorTool apt;
     private TypeElement self;
 
+    private static final EnumSet<Modifier> methodModifiers = EnumSet.of(Modifier.PUBLIC);
+    private static final String methodName = "compareTo";
     private static final String paramName = "o";
     private static final String baseVar = "v";
 
@@ -43,14 +44,6 @@ class CompareToMethodGenerator implements MethodGenerator {
     public MethodWrapper generateMethod() {
         List<VariableElement> paramVars = new LinkedList<>();
         paramVars.add(apt.createParameterElement(self.asType(), paramName, self));
-
-        ExecutableElement methodPrototype = apt.createMethodPrototype(
-                EnumSet.of(Modifier.PUBLIC),
-                "compareTo",
-                        intType,
-                        paramVars,
-                null,
-                self);
 
         List<StatementWrapper> body = null;
         int i = 0;
@@ -87,7 +80,16 @@ class CompareToMethodGenerator implements MethodGenerator {
         BlockWrapper block = apt.createBlock(null, body);
         List<AnnotationWrapper> annotations = new LinkedList<>();
         annotations.add(apt.createOverrideAnnotation());
-        return apt.createMethod(annotations, methodPrototype, block);
+        return apt.createMethod(
+                annotations,
+                methodModifiers,
+                methodName,
+                intType,
+                paramVars,
+                null,
+                block,
+                self
+        );
     }
 
     private VariableWrapper generateAssignment(String variable, ComparableTarget comparableTarget){
@@ -97,41 +99,38 @@ class CompareToMethodGenerator implements MethodGenerator {
     }
 
     private MethodInvocationWrapper generateMethodCall(ComparableTarget comparableTarget){
-
-        StringBuilder targetAccess = new StringBuilder(comparableTarget.getCompareTarget());
+        String targetAccess = comparableTarget.getCompareTarget();
 
         ExpressionWrapper left;
         ExpressionWrapper right;
 
+        String compareReceiver = comparableTarget.getCompareReceiver();
+        ExpressionWrapper receiver = (compareReceiver==null)?null:apt.createMemberSelect(compareReceiver);
 
         if(comparableTarget.getOrder() == Order.DESC){
-            right = apt.createMemberSelect("this" + "." + targetAccess);
-            left = apt.createMemberSelect(paramName + "." + targetAccess);
+            right = apt.createMemberSelect("this");
+            left = apt.createMemberSelect(paramName);
         }else{
-            left = apt.createMemberSelect("this" + "." + targetAccess);
-            right = apt.createMemberSelect(paramName + "." + targetAccess);
+            left = apt.createMemberSelect("this");
+            right = apt.createMemberSelect(paramName);
         }
 
         if(comparableTarget.getKind() == ComparableTarget.Kind.Method){
-            left = apt.createMethodInvocation(left, null);
-            right = apt.createMethodInvocation(right, null);
+            left = apt.createMethodInvocation(left, targetAccess, null);
+            right = apt.createMethodInvocation(right, targetAccess, null);
+        }else{
+            left = apt.createMemberSelect(left, targetAccess);
+            right = apt.createMemberSelect(right, targetAccess);
         }
 
-
-
-        ExpressionWrapper methodSelect;
         List<ExpressionWrapper> params = new LinkedList<>();
-        if(comparableTarget.getMethodType() == ComparableTarget.MethodType.Compare){
+        if(comparableTarget.getMethodType() == ComparableTarget.MethodType.compare){
             params.add(left);
             params.add(right);
-            methodSelect = apt.createMemberSelect(comparableTarget.getCompareMethod());
+            return apt.createMethodInvocation(receiver,comparableTarget.getCompareSelector(),params);
         }else{
             params.add(right);
-            methodSelect = apt.createMemberSelect(left, comparableTarget.getCompareMethod());
+            return apt.createMethodInvocation(left,comparableTarget.getCompareSelector(),params);
         }
-        return apt.createMethodInvocation(methodSelect,params);
     }
-
-
-
 }

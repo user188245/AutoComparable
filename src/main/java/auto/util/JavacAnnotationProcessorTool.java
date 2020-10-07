@@ -15,7 +15,6 @@ import com.sun.tools.javac.util.Name;
 import com.sun.tools.javac.util.Names;
 import com.sun.tools.javac.util.Pair;
 
-import javax.lang.model.element.ExecutableElement;
 import javax.lang.model.element.Modifier;
 import javax.lang.model.element.TypeElement;
 import javax.lang.model.element.VariableElement;
@@ -43,14 +42,6 @@ class JavacAnnotationProcessorTool extends AbstractAnnotationProcessorTool {
     }
 
     @Override
-    public TypeMirror createPureType(TypeMirror typeWithGenerics) {
-        Type.ClassType type = (Type.ClassType)typeWithGenerics;
-        type = type.cloneWithMetadata(type.getMetadata());
-        type.typarams_field = com.sun.tools.javac.util.List.nil();
-        return type;
-    }
-
-    @Override
     public VariableElement createVariableElement(Set<Modifier> modifiers, TypeMirror varType, String varName, TypeElement from) {
         return new Symbol.VarSymbol(getModifierFlag(modifiers), name(varName), (Type)varType, (Symbol)from);
     }
@@ -66,8 +57,7 @@ class JavacAnnotationProcessorTool extends AbstractAnnotationProcessorTool {
         return ImportWrapper.from(treeMaker.Import(treeMaker.QualIdent(classSymbol),false));
     }
 
-    @Override
-    public ModifiersWrapper<ModifiersTree> createModifier(List<AnnotationWrapper> annotations, Set<Modifier> modifiers) {
+    private JCModifiers createModifier(List<AnnotationWrapper> annotations, Set<Modifier> modifiers) {
         com.sun.tools.javac.util.List<JCAnnotation> expr;
         if(annotations == null){
             expr = com.sun.tools.javac.util.List.nil();
@@ -78,7 +68,7 @@ class JavacAnnotationProcessorTool extends AbstractAnnotationProcessorTool {
             }
             expr = com.sun.tools.javac.util.List.from(annotationTrees);
         }
-        return ModifiersWrapper.from(treeMaker.Modifiers(getModifierFlag(modifiers), expr));
+        return treeMaker.Modifiers(getModifierFlag(modifiers), expr);
     }
 
     @Override
@@ -87,7 +77,7 @@ class JavacAnnotationProcessorTool extends AbstractAnnotationProcessorTool {
     }
 
     @Override
-    public MethodInvocationWrapper<MethodInvocationTree> createMethodInvocation(ExpressionWrapper methodExpr, List<ExpressionWrapper> args) {
+    public MethodInvocationWrapper<MethodInvocationTree> createMethodInvocation(ExpressionWrapper receiver, String selector, List<ExpressionWrapper> args) {
         com.sun.tools.javac.util.List<JCExpression> expr;
         if(args != null){
             List<JCExpression> exprList = new LinkedList<JCExpression>();
@@ -99,7 +89,8 @@ class JavacAnnotationProcessorTool extends AbstractAnnotationProcessorTool {
             expr = com.sun.tools.javac.util.List.nil();
         }
 
-        return MethodInvocationWrapper.from(treeMaker.Apply(com.sun.tools.javac.util.List.<JCExpression>nil(), methodExpr==null?null:(JCExpression)methodExpr.getData(), expr));
+        JCExpression method = (receiver==null)? (JCExpression)createMemberSelect(selector).getData() :(JCExpression)createMemberSelect(receiver,selector).getData();
+        return MethodInvocationWrapper.from(treeMaker.Apply(com.sun.tools.javac.util.List.<JCExpression>nil(), method, expr));
     }
 
     @Override
@@ -109,7 +100,7 @@ class JavacAnnotationProcessorTool extends AbstractAnnotationProcessorTool {
 
     @Override
     public IfWrapper<IfTree> createIf(ExpressionWrapper condExpr, StatementWrapper thenExpr, StatementWrapper elseExpr) {
-        return IfWrapper.from(treeMaker.If(condExpr==null?null:(JCExpression)condExpr.getData(), thenExpr==null?null:(JCStatement)thenExpr.getData(), elseExpr==null?null:(JCStatement)elseExpr.getData()));
+        return IfWrapper.from(treeMaker.If((JCExpression)condExpr.getData(), thenExpr==null?null:(JCStatement)thenExpr.getData(), elseExpr==null?null:(JCStatement)elseExpr.getData()));
     }
 
     private Tag toTag(BinaryOperator binaryOperator){
@@ -163,26 +154,7 @@ class JavacAnnotationProcessorTool extends AbstractAnnotationProcessorTool {
     }
 
     @Override
-    public TypeMirror createGenericTypeMirror(TypeMirror prototype, List<TypeMirror> genericTypes) {
-        if(genericTypes == null){
-            throw new IllegalArgumentException();
-        }
-        Type.ClassType type = (Type.ClassType) prototype;
-        Type.ClassType newType = type.cloneWithMetadata(type.getMetadata());
-        newType.typarams_field = com.sun.tools.javac.util.List.convert(Type.class,com.sun.tools.javac.util.List.from(genericTypes));
-        newType.allparams_field = newType.typarams_field;
-        return newType;
-    }
-
-    @Override
-    public MethodWrapper<MethodTree> createMethod(List<AnnotationWrapper> annotations, ExecutableElement method, BlockWrapper block) {
-        JCTree.JCMethodDecl jcMethodDecl = treeMaker.MethodDef((Symbol.MethodSymbol)method,block==null?null:(JCBlock)block.getData());
-        jcMethodDecl.mods = (JCModifiers)createModifier(annotations, method.getModifiers()).getData();
-        return MethodWrapper.from(jcMethodDecl);
-    }
-
-    @Override
-    public ExecutableElement createMethodPrototype(Set<Modifier> modifiers, String name, TypeMirror returnType, List<VariableElement> params, List<TypeMirror> thrown, TypeElement from) {
+    public MethodWrapper<MethodTree> createMethod(List<AnnotationWrapper> annotations, Set<Modifier> modifiers, String name, TypeMirror returnType, List<VariableElement> params, List<TypeMirror> thrown, BlockWrapper block, TypeElement from) {
         List<TypeMirror> paramTypes = new LinkedList<>();
         for(VariableElement ve : params){
             paramTypes.add(ve.asType());
@@ -206,7 +178,9 @@ class JavacAnnotationProcessorTool extends AbstractAnnotationProcessorTool {
                 methodType,
                 (ClassSymbol)from);
         method.params = com.sun.tools.javac.util.List.convert(Symbol.VarSymbol.class, com.sun.tools.javac.util.List.from(params));
-        return method;
+        JCTree.JCMethodDecl jcMethodDecl = treeMaker.MethodDef((Symbol.MethodSymbol)method,block==null?null:(JCBlock)block.getData());
+        jcMethodDecl.mods = createModifier(annotations, method.getModifiers());
+        return MethodWrapper.from(jcMethodDecl);
     }
 
     @Override
