@@ -69,10 +69,6 @@ public class EclipseAnnotationProcessorTool extends AbstractAnnotationProcessorT
         LocalDeclaration localDeclaration = new LocalDeclaration(variableBinding.name, defaultPos, defaultPos);
         localDeclaration.initialization = (Expression)init.getData();
         localDeclaration.type = new SingleTypeReference(variableBinding.type.sourceName(),defaultPos);
-        if(variableBinding instanceof LocalVariableBinding){
-            ((LocalVariableBinding) variableBinding).declaration = localDeclaration;
-            variableBinding.tagBits &= ~TagBits.IsEffectivelyFinal;
-        }
         return VariableWrapper.from(localDeclaration);
     }
 
@@ -88,7 +84,7 @@ public class EclipseAnnotationProcessorTool extends AbstractAnnotationProcessorT
             }
         }
         //TODO
-        ms.receiver = (receiver==null)?new ThisReference(defaultPos, defaultPos):(Expression) receiver.getData(); // QualifiedNameReference(Select)
+        ms.receiver = (receiver==null)?ThisReference.implicitThis():(Expression) receiver.getData(); // QualifiedNameReference(Select)
         ms.selector = selector.toCharArray();// char[](Select)
         ms.arguments = methodArgs; //QualifiedNameReference[](Argument)
 //        ms.binding = MethodBinding(Binding from MethodDecl)
@@ -118,26 +114,32 @@ public class EclipseAnnotationProcessorTool extends AbstractAnnotationProcessorT
     public BinaryWrapper createBinaryOperation(ExpressionWrapper leftExpr, ExpressionWrapper rightExpr, BinaryOperator binaryOperator) {
         Expression left = (Expression) leftExpr.getData();
         Expression right = (Expression) rightExpr.getData();
-        if(left instanceof BinaryExpression){
-            int arity = 1;
-            if(left instanceof CombinedBinaryExpression){
-                arity += ((CombinedBinaryExpression) left).arity;
-            }
-            return BinaryWrapper.from(new CombinedBinaryExpression(left, right, toBinaryOpcode(binaryOperator),arity));
-        }else if(right instanceof BinaryExpression){
-            if(binaryOperator == BinaryOperator.PLUS ||
-                    binaryOperator == BinaryOperator.MUL ||
-                    binaryOperator == BinaryOperator.EQ ||
-                    binaryOperator == BinaryOperator.NE ||
-                    binaryOperator == BinaryOperator.AND ||
-                    binaryOperator == BinaryOperator.OR ||
-                    binaryOperator == BinaryOperator.BITAND ||
-                    binaryOperator == BinaryOperator.BITOR ||
-                    binaryOperator == BinaryOperator.BITXOR){
-                return createBinaryOperation(rightExpr, leftExpr, binaryOperator);
-            }
+        int operator = toBinaryOpcode(binaryOperator);
+        switch(binaryOperator){
+            case EQ:
+            case NE:
+                return BinaryWrapper.from(new EqualExpression(left, right, operator));
+            case AND:
+                return BinaryWrapper.from(new AND_AND_Expression(left, right, operator));
+            case OR:
+                return BinaryWrapper.from(new OR_OR_Expression(left, right, operator));
+            case PLUS:
+                if(left instanceof BinaryExpression){
+                    return createCombinedBinaryExpressionPlus(left,right);
+                }else if(right instanceof BinaryExpression){
+                    return createCombinedBinaryExpressionPlus(right,left);
+                }
+            default:
+                return BinaryWrapper.from(new BinaryExpression(left, right, operator));
         }
-        return BinaryWrapper.from(new BinaryExpression(left, right, toBinaryOpcode(binaryOperator)));
+    }
+
+    private BinaryWrapper createCombinedBinaryExpressionPlus(Expression left, Expression right){
+        int arity = 1;
+        if(left instanceof CombinedBinaryExpression){
+            arity += ((CombinedBinaryExpression) left).arity;
+        }
+        return BinaryWrapper.from(new CombinedBinaryExpression(left, right, OperatorIds.PLUS, arity));
     }
 
     @Override
@@ -162,9 +164,10 @@ public class EclipseAnnotationProcessorTool extends AbstractAnnotationProcessorT
         i = 0;
         for(VariableElement ve : params){
             VariableBinding vb = (VariableBinding)((VariableElementImpl) ve)._binding;
-            TypeReference tr = new SingleTypeReference(vb.name,defaultPos);
+            TypeBinding tb = vb.type;
+            TypeReference tr = new SingleTypeReference(tb.sourceName(),defaultPos);
             Argument arg = new Argument(vb.name, defaultPos, tr,0);
-            newParamTypeBinding[i] = vb.type;
+            newParamTypeBinding[i] = tb;
             newArguments[i++] = arg;
         }
 
@@ -225,16 +228,24 @@ public class EclipseAnnotationProcessorTool extends AbstractAnnotationProcessorT
     @Override
     public ExpressionWrapper createMemberSelect(String fullPath) {
         String[] stringSplitAsDelimiter = fullPath.split("\\.");
+        Reference receiver = createSingleNameReference(stringSplitAsDelimiter[0]);
         if(stringSplitAsDelimiter.length == 1){
-            return ExpressionWrapper.from(createSingleNameReference(fullPath));
+            return ExpressionWrapper.from(receiver);
         }
-        char[][] tokens = new char[stringSplitAsDelimiter.length][];
-        long[] pos = new long[stringSplitAsDelimiter.length];
-        Arrays.fill(pos,defaultPos);
-        for(int i=0; i<tokens.length; i++){
-            tokens[i] = stringSplitAsDelimiter[i].toCharArray();
+
+//        char[][] tokens = new char[stringSplitAsDelimiter.length][];
+//        long[] pos = new long[stringSplitAsDelimiter.length];
+//        Arrays.fill(pos,defaultPos);
+//        for(int i=0; i<tokens.length; i++){
+//            tokens[i] = stringSplitAsDelimiter[i].toCharArray();
+//        }
+
+        for(int i=1; i<stringSplitAsDelimiter.length; i++){
+            FieldReference newReceiver = new FieldReference(stringSplitAsDelimiter[i].toCharArray(),defaultPos);
+            newReceiver.receiver = receiver;
+            receiver = newReceiver;
         }
-        return ExpressionWrapper.from(new QualifiedNameReference(tokens, pos, defaultPos, defaultPos));
+        return ExpressionWrapper.from(receiver);
     }
 
     private Reference createSingleNameReference(String str){
@@ -303,6 +314,8 @@ public class EclipseAnnotationProcessorTool extends AbstractAnnotationProcessorT
         return extractClass(compilationUnitWrapper);
     }
 
+    //todo
+    // lookupEnvironment must be refreshed with new scope data.
     @Override
     public void injectInterface(ClassWrapper classWrapper, TypeElement infType) {
         injectInterface(classWrapper, infType, null);

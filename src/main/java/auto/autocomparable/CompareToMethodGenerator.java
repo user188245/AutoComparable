@@ -52,6 +52,7 @@ class CompareToMethodGenerator implements MethodGenerator {
             //base
             String varName = baseVar + i++;
             ExpressionWrapper var = apt.createMemberSelect(varName);
+            ExpressionWrapper returnVar = apt.createMemberSelect(varName);
 
             // init
             VariableWrapper assignment = generateAssignment(varName,target); // v# = compare(this.?, o.?); or v# = this.?.compareTo(o.?);
@@ -60,15 +61,14 @@ class CompareToMethodGenerator implements MethodGenerator {
             IfWrapper ift = null;
             if(body != null){
                 ift = apt.createIf(
-                    apt.createBinaryOperation(var,apt.createLiteral(0),
-                    BinaryOperator.EQ),
+                    apt.createBinaryOperation(var,apt.createLiteral(0), BinaryOperator.EQ),
                     apt.createBlock(null, body),
             null); // if( v# == 0 ) then {Itr[v#-1]}
             }
             body = new LinkedList<>();
 
             // return
-            ReturnWrapper rtn = apt.createReturn(var); // return v#;
+            ReturnWrapper rtn = apt.createReturn(returnVar); // return v#;
 
             // body creation
             body.add(assignment);
