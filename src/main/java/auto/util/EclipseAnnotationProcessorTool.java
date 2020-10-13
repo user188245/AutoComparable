@@ -18,6 +18,7 @@ import java.util.Set;
 public class EclipseAnnotationProcessorTool extends AbstractAnnotationProcessorTool {
 
     private final Factory factory;
+    private final LookupEnvironment lookupEnv;
 
     private static final char[] OVERRIDE = {'O','v','e','r','r','i','d','e'};
 
@@ -27,7 +28,9 @@ public class EclipseAnnotationProcessorTool extends AbstractAnnotationProcessorT
     public EclipseAnnotationProcessorTool(BaseProcessingEnvImpl processingEnv) {
         super(processingEnv);
         this.factory = processingEnv.getFactory();
+        this.lookupEnv = processingEnv.getLookupEnvironment();
     }
+
 
     @Override
     public VariableElement createVariableElement(Set<Modifier> modifiers, TypeMirror varType, String varName, TypeElement from) {
@@ -87,10 +90,6 @@ public class EclipseAnnotationProcessorTool extends AbstractAnnotationProcessorT
         ms.receiver = (receiver==null)?ThisReference.implicitThis():(Expression) receiver.getData(); // QualifiedNameReference(Select)
         ms.selector = selector.toCharArray();// char[](Select)
         ms.arguments = methodArgs; //QualifiedNameReference[](Argument)
-//        ms.binding = MethodBinding(Binding from MethodDecl)
-//        ms.expectedType = TypeBinding(Binding from Return Type)
-//        ms.actualReceiverType = SourceTypeBinding(Class from Select)
-//        ms.argumentTypes = SourceTypeBinding(Class from Argument)
         return MethodInvocationWrapper.from(ms);
     }
 
@@ -174,7 +173,6 @@ public class EclipseAnnotationProcessorTool extends AbstractAnnotationProcessorT
         ReferenceBinding declaringClassArg = (SourceTypeBinding)((TypeElementImpl) from)._binding;
 
         MethodBinding methodBinding = new MethodBinding(modifiersArg,selectorArg,returnTypeArg,newParamTypeBinding,thrownArg,declaringClassArg);
-
         TypeReference returnTypeReference = new SingleTypeReference(methodBinding.returnType.sourceName(),defaultPos);
 
         MethodDeclaration methodDeclaration = new MethodDeclaration(null);
@@ -232,14 +230,6 @@ public class EclipseAnnotationProcessorTool extends AbstractAnnotationProcessorT
         if(stringSplitAsDelimiter.length == 1){
             return ExpressionWrapper.from(receiver);
         }
-
-//        char[][] tokens = new char[stringSplitAsDelimiter.length][];
-//        long[] pos = new long[stringSplitAsDelimiter.length];
-//        Arrays.fill(pos,defaultPos);
-//        for(int i=0; i<tokens.length; i++){
-//            tokens[i] = stringSplitAsDelimiter[i].toCharArray();
-//        }
-
         for(int i=1; i<stringSplitAsDelimiter.length; i++){
             FieldReference newReceiver = new FieldReference(stringSplitAsDelimiter[i].toCharArray(),defaultPos);
             newReceiver.receiver = receiver;
@@ -314,8 +304,6 @@ public class EclipseAnnotationProcessorTool extends AbstractAnnotationProcessorT
         return extractClass(compilationUnitWrapper);
     }
 
-    //todo
-    // lookupEnvironment must be refreshed with new scope data.
     @Override
     public void injectInterface(ClassWrapper classWrapper, TypeElement infType) {
         injectInterface(classWrapper, infType, null);
@@ -323,31 +311,50 @@ public class EclipseAnnotationProcessorTool extends AbstractAnnotationProcessorT
 
     @Override
     public void injectInterface(ClassWrapper classWrapper, TypeElement infType, List<TypeElement> genericTypes) {
-        TypeDeclaration td = (TypeDeclaration)classWrapper.getData();
-        TypeReference[] newInterfaces = new TypeReference[td.superInterfaces.length+1];
-        System.arraycopy(td.superInterfaces, 0, newInterfaces, 0, td.superInterfaces.length);
-        newInterfaces[newInterfaces.length-1] = createInterface(infType,genericTypes);
-        td.superInterfaces = null;
-        td.superInterfaces = newInterfaces;
+        TypeDeclaration typeDeclaration = (TypeDeclaration)classWrapper.getData();
+        TypeReference inf = createInterface((TypeElementImpl)infType,genericTypes);
+        injectInterface(typeDeclaration,inf);
+
+
     }
 
-    private TypeReference createInterface(TypeElement infType, List<TypeElement> genericTypes){
+    private void injectInterface(TypeDeclaration td, TypeReference inf){
+        TypeReference[] newInterfaces = new TypeReference[td.superInterfaces.length+1];
+        System.arraycopy(td.superInterfaces, 0, newInterfaces, 0, td.superInterfaces.length);
+        newInterfaces[newInterfaces.length-1] = inf;
+        td.superInterfaces = null;
+        td.superInterfaces = newInterfaces;
+
+        SourceTypeBinding sourceTypeBinding = (SourceTypeBinding)td.binding;
+        ReferenceBinding[] newInterfaceBindings = new ReferenceBinding[sourceTypeBinding.superInterfaces.length+1];
+        System.arraycopy(sourceTypeBinding.superInterfaces, 0, newInterfaceBindings, 0, sourceTypeBinding.superInterfaces.length);
+        newInterfaceBindings[newInterfaceBindings.length-1] = (ReferenceBinding) inf.resolvedType;
+        sourceTypeBinding.setSuperInterfaces(newInterfaceBindings);
+    }
+
+    private TypeReference createInterface(TypeElementImpl infType, List<TypeElement> genericTypes){
         if(genericTypes != null && !genericTypes.isEmpty()){
             char[] name = getName(infType);
             TypeReference[] typeReferences = new TypeReference[genericTypes.size()];
+            TypeBinding[] typeBindings = new TypeBinding[genericTypes.size()];
             int i = 0;
             for(TypeElement te : genericTypes){
-                typeReferences[i++] = createInterface(te);
+                typeReferences[i] = createInterface((TypeElementImpl) te);
+                typeBindings[i] = typeReferences[i].resolvedType;
+                i++;
             }
-            return new ParameterizedSingleTypeReference(name,typeReferences, 0, defaultPos);
-        }else{
-            return createInterface(infType);
+            ParameterizedSingleTypeReference pstr = new ParameterizedSingleTypeReference(name,typeReferences, 0, defaultPos);
+            pstr.resolvedType = lookupEnv.createParameterizedType((ReferenceBinding)infType._binding,typeBindings,null);
+            return pstr;
         }
+        return createInterface(infType);
     }
 
-    private TypeReference createInterface(TypeElement infType){
+    private TypeReference createInterface(TypeElementImpl infType){
         char[] name = getName(infType);
-        return new SingleTypeReference(name,defaultPos);
+        SingleTypeReference str = new SingleTypeReference(name,defaultPos);
+        str.resolvedType = (TypeBinding)infType._binding;
+        return str;
     }
 
     private SourceTypeBinding getSourceTypeBindingFromTypeElement(TypeElementImpl typeElement){
@@ -489,6 +496,13 @@ public class EclipseAnnotationProcessorTool extends AbstractAnnotationProcessorT
         newMethods[newMethods.length-1] = method;
         cls.methods = null;
         cls.methods = newMethods;
+
+        SourceTypeBinding stb = cls.binding;
+        MethodBinding[] oldMethodBindings = stb.methods();
+        MethodBinding[] newMethodBindings = new MethodBinding[oldMethodBindings.length+1];
+        System.arraycopy(oldMethodBindings,0,newMethodBindings,0,oldMethodBindings.length);
+        newMethodBindings[newMethodBindings.length-1] = method.binding;
+        stb.setMethods(newMethodBindings);
     }
 
     @Override
