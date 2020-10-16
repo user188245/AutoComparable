@@ -155,7 +155,7 @@ class JavacAnnotationProcessorTool extends AbstractAnnotationProcessorTool {
 
     @Override
     public MethodWrapper<MethodTree> createMethod(List<AnnotationWrapper> annotations, Set<Modifier> modifiers, String name, TypeMirror returnType, List<VariableElement> params, List<TypeMirror> thrown, BlockWrapper block, TypeElement from) {
-        List<TypeMirror> paramTypes = new LinkedList<>();
+        List<TypeMirror> paramTypes = new LinkedList<TypeMirror>();
         for(VariableElement ve : params){
             paramTypes.add(ve.asType());
         }
@@ -273,7 +273,7 @@ class JavacAnnotationProcessorTool extends AbstractAnnotationProcessorTool {
     @Override
     public ClassWrapper<ClassTree> injectImport(CompilationUnitWrapper compilationUnitWrapper, ImportWrapper importWrapper) {
         JCCompilationUnit jcCompilationUnit = (JCCompilationUnit)compilationUnitWrapper.getData();
-        LinkedList<JCTree> defsTmp = new LinkedList<>();
+        LinkedList<JCTree> defsTmp = new LinkedList<JCTree>();
 
         JCPackageDecl packageDecl = null;
         JCClassDecl jcClassDecl = null;
@@ -305,7 +305,7 @@ class JavacAnnotationProcessorTool extends AbstractAnnotationProcessorTool {
         JCExpression implementsUnit = createIdent(infType);
         Symbol sym = ((JCIdent)implementsUnit).sym;
         if(!(sym.getTypeParameters().isEmpty())){
-            List<JCExpression> list = new ArrayList<>(genericTypes.size());
+            List<JCExpression> list = new ArrayList<JCExpression>(genericTypes.size());
             for(TypeElement te : genericTypes){
                 list.add(createIdent(te));
             }

@@ -8,6 +8,7 @@ import javax.lang.model.element.TypeElement;
 import javax.lang.model.element.VariableElement;
 import javax.lang.model.type.TypeKind;
 import javax.lang.model.type.TypeMirror;
+import java.lang.annotation.Annotation;
 import java.util.List;
 import java.util.Set;
 
@@ -70,6 +71,8 @@ public interface AnnotationProcessorTool {
 
     // extraction
 
+    Annotation extractAnnotations(TypeMirror type, Class<? extends Annotation> annotation);
+
     ClassWrapper extractClass(CompilationUnitWrapper compilationUnitWrapper);
 
     CompilationUnitWrapper extractCompilationUnit(TypeElement typeElement);
@@ -79,4 +82,5 @@ public interface AnnotationProcessorTool {
     // convert
 
     Element asElement(TypeMirror tm);
+
 }

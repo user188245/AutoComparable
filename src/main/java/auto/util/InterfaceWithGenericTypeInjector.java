@@ -19,7 +19,7 @@ public abstract class InterfaceWithGenericTypeInjector extends InterfaceInjector
             throw new IllegalArgumentException("The number of generic types must be equivalent to the number of type parameters defined by interface prototype");
         }
         this.genericTypes = genericTypes;
-        this.genericTypeElements = new ArrayList<>(genericTypes.size());
+        this.genericTypeElements = new ArrayList<TypeElement>(genericTypes.size());
         for(Class<?> cls : genericTypes){
             if(cls != null) {
                 genericTypeElements.add(annotationProcessorTool.createTypeElement(cls));
@@ -56,7 +56,7 @@ public abstract class InterfaceWithGenericTypeInjector extends InterfaceInjector
     }
 
     private static List<TypeElement> createGenericTypeElementsWithSubstitute(List<TypeElement> genericTypeElements, TypeElement substitute){
-        List<TypeElement> result = new ArrayList<>(genericTypeElements.size());
+        List<TypeElement> result = new ArrayList<TypeElement>(genericTypeElements.size());
         for(TypeElement x : genericTypeElements){
             result.add(x==null?substitute:x);
         }

@@ -7,6 +7,7 @@ import javax.lang.model.type.TypeKind;
 import javax.lang.model.type.TypeMirror;
 import javax.lang.model.util.Elements;
 import javax.lang.model.util.Types;
+import java.lang.annotation.Annotation;
 
 abstract class AbstractAnnotationProcessorTool implements AnnotationProcessorTool{
 
@@ -51,6 +52,11 @@ abstract class AbstractAnnotationProcessorTool implements AnnotationProcessorToo
     @Override
     public Element asElement(TypeMirror tm){
         return types.asElement(tm);
+    }
+
+    @Override
+    public Annotation extractAnnotations(TypeMirror type, Class<? extends Annotation> annotation){
+        return types.asElement(type).getAnnotation(annotation);
     }
 
 }

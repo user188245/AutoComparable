@@ -29,7 +29,7 @@ public class ComparableInjector extends InterfaceWithGenericTypeInjector {
     }
 
     private static List<Class<?>> createGenericTypes(){
-        List<Class<?>> genericTypes = new ArrayList<>(1);
+        List<Class<?>> genericTypes = new ArrayList<Class<?>>(1);
         genericTypes.add(null); // Self Types
         return genericTypes;
     }
@@ -87,19 +87,17 @@ public class ComparableInjector extends InterfaceWithGenericTypeInjector {
                 compareSelector = alternativeMethodName;
             }else{
                 //todo
-                // find a direct accessible method
+                // if the receiver.selector is located at outer class, then the selector must be "static method".
                 compareReceiver = alternativeMethodName.substring(0,dot);
                 compareSelector = alternativeMethodName.substring(dot+1);
             }
         }else{
             compareReceiver = getPrimitiveCompareReceiver(compareTargetType);
             if(compareReceiver == null){
-                //todo
-                // fix the if statement in order that 'getAnnotation' function works well
-//                if(!annotationProcessorTool.isSubtype(compareTargetType,comparableType) && e.getAnnotation(AutoComparable.class) == null){
-//                    // it is nether primitive nor Comparable nor AutoComparable.
-//                    throw new IllegalArgumentException();
-//                }
+                if(!annotationProcessorTool.isSubtype(compareTargetType,comparableType) && annotationProcessorTool.extractAnnotations(compareTargetType,AutoComparable.class) == null){
+                    // it is nether primitive nor Comparable nor AutoComparable.
+                    throw new IllegalArgumentException();
+                }
                 // compareTarget has the method "compareTo"
                 type = ComparableTarget.MethodType.compareTo;
             }
@@ -122,7 +120,7 @@ public class ComparableInjector extends InterfaceWithGenericTypeInjector {
 
         // 2. Get @AutoComparable.isLowPriorityFirst
         AutoComparable autoComparable = cls.getAnnotation(AutoComparable.class);
-        List<ComparableTarget> fields = new ArrayList<>();
+        List<ComparableTarget> fields = new ArrayList<ComparableTarget>();
 
         // 3. Find Field member containing @AutoComparableTarget
         List<? extends Element> classFields = cls.getEnclosedElements();

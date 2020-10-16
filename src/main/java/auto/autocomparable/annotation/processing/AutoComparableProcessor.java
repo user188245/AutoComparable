@@ -32,7 +32,7 @@ public class AutoComparableProcessor extends AbstractProcessor {
 
     @Override
     public Set<String> getSupportedAnnotationTypes() {
-        Set<String> supportedAnnotationTypes = new LinkedHashSet<>();
+        Set<String> supportedAnnotationTypes = new LinkedHashSet<String>();
         supportedAnnotationTypes.add(AutoComparable.class.getCanonicalName());
         return supportedAnnotationTypes;
     }

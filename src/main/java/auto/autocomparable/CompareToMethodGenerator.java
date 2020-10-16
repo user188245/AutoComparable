@@ -40,6 +40,8 @@ class CompareToMethodGenerator implements MethodGenerator {
         this.intType = apt.createPrimitiveType(TypeKind.INT);
     }
 
+    //todo
+    // make it be changed to use only 1 local variable.
     @Override
     public MethodWrapper generateMethod() {
         List<VariableElement> paramVars = new LinkedList<>();
