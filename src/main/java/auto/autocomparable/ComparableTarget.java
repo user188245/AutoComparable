@@ -58,7 +58,6 @@ class ComparableTarget implements Comparable<ComparableTarget>{
         }else{
             this.compareSelector = methodType.name();
         }
-
     }
 
     @Override

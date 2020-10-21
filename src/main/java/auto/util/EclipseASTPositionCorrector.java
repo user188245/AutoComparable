@@ -2,10 +2,14 @@ package auto.util;
 
 import auto.util.wrapper.ASTWrapper;
 
-public class EclipseASTPositionCorrector implements ASTPositionCorrector {
+class EclipseASTPositionCorrector implements ASTPositionCorrector {
+
+    private static int INDENT = 4;
+
     @Override
     public void correctPosition(ASTWrapper tree) {
         //todo
         // not implemented yet
+
     }
 }

@@ -107,6 +107,7 @@ class CompareToMethodGenerator implements MethodGenerator {
         ExpressionWrapper right;
 
         String compareReceiver = comparableTarget.getCompareReceiver();
+
         ExpressionWrapper receiver = (compareReceiver==null)?null:apt.createMemberSelect(compareReceiver);
 
         if(comparableTarget.getOrder() == Order.DESC){

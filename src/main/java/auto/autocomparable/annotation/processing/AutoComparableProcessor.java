@@ -39,15 +39,13 @@ public class AutoComparableProcessor extends AbstractProcessor {
 
     @Override
     public boolean process(Set<? extends TypeElement> annotations, RoundEnvironment roundEnv) {
-
         for(Element e : roundEnv.getElementsAnnotatedWith(AutoComparable.class)){
             try{
                 comparableInjector.process(apt.extractCompilationUnit((TypeElement)e));
-            }catch(Exception err){
-                messager.printMessage(Diagnostic.Kind.ERROR,"Error Occurred on " + e.getSimpleName()  +" during compile.   Err : " + err.getMessage());
-                err.printStackTrace();
+            }catch(RuntimeException err){
+                messager.printMessage(Diagnostic.Kind.ERROR, err.getMessage(), e);
             }
         }
-        return false;
+        return true;
     }
 }

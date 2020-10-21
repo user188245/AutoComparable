@@ -16,7 +16,7 @@ public abstract class InterfaceWithGenericTypeInjector extends InterfaceInjector
         super(inf, annotationProcessorTool);
         int countOfGenerics = genericTypes.size();
         if(inf.getTypeParameters().length != countOfGenerics){
-            throw new IllegalArgumentException("The number of generic types must be equivalent to the number of type parameters defined by interface prototype");
+            throw new AnnotationProcessingException(ExceptionCode.INTERNAL_ERROR, "The number of generic types must be equivalent to the number of type parameters defined by interface prototype");
         }
         this.genericTypes = genericTypes;
         this.genericTypeElements = new ArrayList<TypeElement>(genericTypes.size());
@@ -39,7 +39,6 @@ public abstract class InterfaceWithGenericTypeInjector extends InterfaceInjector
 
     @Override
     protected TypeMirror getInfTypeMirror(TypeElement self) {
-//        TypeMirror typeMirror = infType.asType();
         List<TypeElement> genericsTypeElementsWithSubstitute = createGenericTypeElementsWithSubstitute(genericTypeElements,self);
         TypeMirror[] genericsTypeMirrors = new TypeMirror[genericsTypeElementsWithSubstitute.size()];
         int i = 0;

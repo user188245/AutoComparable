@@ -3,23 +3,22 @@ package auto.autocomparable;
 import auto.autocomparable.annotation.AutoComparable;
 import auto.autocomparable.annotation.AutoComparableTarget;
 import auto.autocomparable.annotation.Order;
+import auto.util.AnnotationProcessingException;
 import auto.util.AnnotationProcessorTool;
 import auto.util.InterfaceWithGenericTypeInjector;
 import auto.util.MethodGenerator;
 import auto.util.wrapper.ClassWrapper;
 import auto.util.wrapper.MethodWrapper;
 
-import javax.lang.model.element.Element;
-import javax.lang.model.element.ElementKind;
-import javax.lang.model.element.ExecutableElement;
-import javax.lang.model.element.TypeElement;
+import javax.lang.model.element.*;
+import javax.lang.model.type.TypeKind;
 import javax.lang.model.type.TypeMirror;
 import java.util.ArrayList;
 import java.util.List;
 
 public class ComparableInjector extends InterfaceWithGenericTypeInjector {
 
-    private static TypeMirror comparableType = null;
+    private TypeMirror comparableType = null;
 
     public ComparableInjector(AnnotationProcessorTool annotationProcessorTool){
         super(Comparable.class, ComparableInjector.createGenericTypes(), annotationProcessorTool);
@@ -59,7 +58,7 @@ public class ComparableInjector extends InterfaceWithGenericTypeInjector {
 
     private ComparableTarget getComparableTarget(Element e, AutoComparableTarget autoComparableTarget){
         if(e.getKind() != ElementKind.FIELD && e.getKind() != ElementKind.METHOD){
-            throw new IllegalArgumentException();
+            throw new AnnotationProcessingException(AutoComparableExceptionCode.INVALID_AUTO_COMPARABLE_TARGET, "Only method or field variable are allowed as a @AutoComparableTarget");
         }
         ComparableTarget.Kind kind = ComparableTarget.Kind.Field;
         ComparableTarget.MethodType type = ComparableTarget.MethodType.compare;
@@ -69,7 +68,7 @@ public class ComparableInjector extends InterfaceWithGenericTypeInjector {
             kind = ComparableTarget.Kind.Method;
             ExecutableElement ee = ((ExecutableElement)e);
             if(!ee.getParameters().isEmpty()){
-                throw new IllegalArgumentException();
+                throw new AnnotationProcessingException(AutoComparableExceptionCode.INVALID_AUTO_COMPARABLE_TARGET, "The method using @AutoComparableTarget must not have a parameter.");
             }
             compareTargetType = ee.getReturnType();
         }else{
@@ -86,17 +85,68 @@ public class ComparableInjector extends InterfaceWithGenericTypeInjector {
             if(dot == -1){
                 compareSelector = alternativeMethodName;
             }else{
-                //todo
-                // if the receiver.selector is located at outer class, then the selector must be "static method".
                 compareReceiver = alternativeMethodName.substring(0,dot);
                 compareSelector = alternativeMethodName.substring(dot+1);
             }
+            try {
+                boolean exactlyMethodExist = false;
+                TypeElement alternativeClass = (compareReceiver==null)? (TypeElement) e.getEnclosingElement() :annotationProcessorTool.createTypeElement(Class.forName(compareReceiver));
+                AnnotationProcessingException hold = null;
+                ExecutableElement alternativeMethod = null;
+                for(Element e2 : alternativeClass.getEnclosedElements()){
+                    if(e2.getSimpleName().toString().equals(compareSelector)){
+                        if(e2 instanceof ExecutableElement){
+                            alternativeMethod = (ExecutableElement)e2;
+                            if(alternativeMethod.getReturnType().getKind() != TypeKind.INT){
+                                hold = new AnnotationProcessingException(AutoComparableExceptionCode.ILLEGAL_AUTO_COMPARABLE_TARGET_ARGUMENT, "The alternative method must return int.");
+                                continue;
+                            }
+                            if(alternativeMethod.getParameters().size() != 2){
+                                hold = new AnnotationProcessingException(AutoComparableExceptionCode.ILLEGAL_AUTO_COMPARABLE_TARGET_ARGUMENT, "The alternative method must have exactly 2 parameter.");
+                                continue;
+                            }
+                            boolean isError = false;
+                            for(VariableElement e3 : alternativeMethod.getParameters()){
+                                if(!annotationProcessorTool.isSubtype(compareTargetType, e3.asType())){
+                                    hold = new AnnotationProcessingException(AutoComparableExceptionCode.ILLEGAL_AUTO_COMPARABLE_TARGET_ARGUMENT, "The alternative method has Illegal parameters. Expected Parameter: " + compareTargetType + ", Actual Parameter: " + e3.asType());
+                                    isError = true;
+                                    break;
+                                }
+                            }
+                            if(isError){
+                                continue;
+                            }
+                            if(!alternativeMethod.getThrownTypes().isEmpty()){
+                                hold = new AnnotationProcessingException(AutoComparableExceptionCode.ILLEGAL_AUTO_COMPARABLE_TARGET_ARGUMENT, "The alternative method must not have any of thrown.");
+                                continue;
+                            }
+                            if(compareReceiver!=null && !annotationProcessorTool.isSubtype(alternativeClass.asType(), e.getEnclosingElement().asType()) && !alternativeMethod.getModifiers().contains(Modifier.STATIC)){
+                                hold = new AnnotationProcessingException(AutoComparableExceptionCode.ILLEGAL_AUTO_COMPARABLE_TARGET_ARGUMENT, "The alternative method on external class must be static.");
+                                continue;
+                            }
+                            exactlyMethodExist = true;
+                            break;
+                        }else{
+                            hold = new AnnotationProcessingException(AutoComparableExceptionCode.ILLEGAL_AUTO_COMPARABLE_TARGET_ARGUMENT, "Alternative method is not executable.");
+                        }
+                    }
+                }
+                if(!exactlyMethodExist){
+                    if(hold == null){
+                        hold = new AnnotationProcessingException(AutoComparableExceptionCode.ILLEGAL_AUTO_COMPARABLE_TARGET_ARGUMENT, "Can't find an alternative method.");
+                    }
+                    throw hold;
+                }
+            } catch (ClassNotFoundException ex) {
+                throw new AnnotationProcessingException(AutoComparableExceptionCode.ILLEGAL_AUTO_COMPARABLE_TARGET_ARGUMENT, "Can't find a class including alternative method.");
+            }
+
         }else{
             compareReceiver = getPrimitiveCompareReceiver(compareTargetType);
             if(compareReceiver == null){
                 if(!annotationProcessorTool.isSubtype(compareTargetType,comparableType) && annotationProcessorTool.extractAnnotations(compareTargetType,AutoComparable.class) == null){
                     // it is nether primitive nor Comparable nor AutoComparable.
-                    throw new IllegalArgumentException();
+                    throw new AnnotationProcessingException(AutoComparableExceptionCode.INVALID_AUTO_COMPARABLE_TARGET, "The return value of method or Type of field with @AutoComparableTarget must be comparable(or holds @AutoComparable)");
                 }
                 // compareTarget has the method "compareTo"
                 type = ComparableTarget.MethodType.compareTo;
@@ -127,7 +177,7 @@ public class ComparableInjector extends InterfaceWithGenericTypeInjector {
 
         // 4. If a Field Member doesn't exist, CompileError
         if(classFields.isEmpty()){
-            throw new IllegalArgumentException();
+            throw new AnnotationProcessingException(AutoComparableExceptionCode.INTERNAL_ERROR, "Missing Elements of class.");
         }
 
 
@@ -136,7 +186,7 @@ public class ComparableInjector extends InterfaceWithGenericTypeInjector {
                 ExecutableElement ee = ((ExecutableElement)e);
                 // 5. Check if there's a method which is not compatible with CompareTo(TargetClass cls) method for method overloading. if it exists, CompileError
                 if(ee.getSimpleName().toString().equals("compareTo") && ee.getParameters().size() == 1 && annotationProcessorTool.isSameType(ee.getParameters().get(0).asType(),cls.asType())){
-                    throw new IllegalArgumentException();
+                    throw new AnnotationProcessingException(AutoComparableExceptionCode.METHOD_EXIST, "The abstract method '" + ee.getSimpleName() + "' is already implemented.");
                 }
             }
             AutoComparableTarget autoComparableTarget = e.getAnnotation(AutoComparableTarget.class);
@@ -148,7 +198,7 @@ public class ComparableInjector extends InterfaceWithGenericTypeInjector {
             }
         }
         if(fields.isEmpty()){
-            throw new IllegalArgumentException();
+            throw new AnnotationProcessingException(AutoComparableExceptionCode.MISSING_AUTO_COMPARABLE_TARGET, "@AutoComparable must have 1 @AutoComparableTarget at least.");
         }
         MethodGenerator methodGenerator = new CompareToMethodGenerator(fields,(autoComparable.isLowPriorityFirst())? Order.ASC:Order.DESC,annotationProcessorTool, cls);
         // 8. Generate CompareTo method by using CompareToMethodGenerator.

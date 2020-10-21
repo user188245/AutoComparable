@@ -15,7 +15,7 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Set;
 
-public class EclipseAnnotationProcessorTool extends AbstractAnnotationProcessorTool {
+class EclipseAnnotationProcessorTool extends AbstractAnnotationProcessorTool {
 
     private final Factory factory;
     private final LookupEnvironment lookupEnv;
@@ -27,7 +27,7 @@ public class EclipseAnnotationProcessorTool extends AbstractAnnotationProcessorT
     private static final int defaultPos = 0;
     private static final int defaultLineNum = 0;
 
-    public EclipseAnnotationProcessorTool(BaseProcessingEnvImpl processingEnv) {
+    EclipseAnnotationProcessorTool(BaseProcessingEnvImpl processingEnv) {
         super(processingEnv);
         this.factory = processingEnv.getFactory();
         this.lookupEnv = processingEnv.getLookupEnvironment();
@@ -263,7 +263,7 @@ public class EclipseAnnotationProcessorTool extends AbstractAnnotationProcessorT
         if(expr instanceof Reference){
             return createMemberSelect(String.valueOf(expr.printExpression(0, new StringBuffer()).append('.').append(fullPath)));
         }
-        throw new IllegalArgumentException();
+        throw new AnnotationProcessingException(ExceptionCode.INTERNAL_ERROR, "The expression of member select tree has illegal type.");
     }
 
     @Override
@@ -294,7 +294,7 @@ public class EclipseAnnotationProcessorTool extends AbstractAnnotationProcessorT
         if(obj instanceof Integer || obj instanceof Byte || obj instanceof Character || obj instanceof Short){
             return LiteralWrapper.from(IntLiteral.buildIntLiteral(name,defaultPos,defaultPos));
         }
-        throw new IllegalArgumentException("The Argument must belong to primitive type or String");
+        throw new AnnotationProcessingException(ExceptionCode.INTERNAL_ERROR, "The Argument must belong to primitive type or String");
     }
 
     @Override
@@ -508,7 +508,7 @@ public class EclipseAnnotationProcessorTool extends AbstractAnnotationProcessorT
             case TYPEVAR:
                 return (TypeBinding)((ElementImpl)asElement(typeMirror))._binding;
             default:
-                throw new IllegalArgumentException("Can't convert the type into binding.");
+                throw new AnnotationProcessingException(ExceptionCode.INTERNAL_ERROR, "Can't convert the type into binding.");
         }
     }
 

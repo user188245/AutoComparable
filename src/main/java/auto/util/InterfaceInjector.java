@@ -19,7 +19,7 @@ public abstract class InterfaceInjector implements CompilationUnitProcessor {
     public InterfaceInjector(Class<?> inf, AnnotationProcessorTool annotationProcessorTool) throws IllegalArgumentException{
         setAnnotationProcessorTool(annotationProcessorTool);
         if(!inf.isInterface()){
-            throw new IllegalArgumentException(inf.getName() + " isn't interface.");
+            throw new AnnotationProcessingException(ExceptionCode.INTERNAL_ERROR, inf.getName() + " isn't interface.");
         }
         this.inf = inf;
         this.fields = inf.getFields();
@@ -44,7 +44,7 @@ public abstract class InterfaceInjector implements CompilationUnitProcessor {
         ClassWrapper classWrapper = injectImportAndGetClass(compilationUnit);
         TypeElement te = annotationProcessorTool.extractTypeElement(classWrapper);
         if(containsInterfaceDuplication(te)){
-            throw new IllegalArgumentException();
+            throw new AnnotationProcessingException(ExceptionCode.INTERFACE_EXIST, inf.getName() + " is already exists.");
         }
         injectInterface(classWrapper);
         processAfterInterfaceInjection(classWrapper);

@@ -186,7 +186,7 @@ class JavacAnnotationProcessorTool extends AbstractAnnotationProcessorTool {
     @Override
     public BlockWrapper<BlockTree> createBlock(Set<Modifier> modifiers, List<StatementWrapper> statements) {
         if(statements == null){
-            throw new IllegalArgumentException();
+            throw new AnnotationProcessingException(ExceptionCode.INTERNAL_ERROR, "The statements in the block must not be null.");
         }
         List<JCStatement> statementList = new LinkedList<JCStatement>();
         for(StatementWrapper sw : statements){
@@ -290,7 +290,7 @@ class JavacAnnotationProcessorTool extends AbstractAnnotationProcessorTool {
             }
         }
         if(jcClassDecl == null){
-            throw new IllegalArgumentException();
+            throw new AnnotationProcessingException(ExceptionCode.INTERNAL_ERROR, "The class is missing.");
         }
         defsTmp.addFirst(importWrapper==null?null:(JCTree)importWrapper.getData());
         defsTmp.addFirst(packageDecl);

@@ -56,7 +56,8 @@ abstract class AbstractAnnotationProcessorTool implements AnnotationProcessorToo
 
     @Override
     public Annotation extractAnnotations(TypeMirror type, Class<? extends Annotation> annotation){
-        return types.asElement(type).getAnnotation(annotation);
+        Element e = types.asElement(type);
+        return e==null?null:e.getAnnotation(annotation);
     }
 
 }
