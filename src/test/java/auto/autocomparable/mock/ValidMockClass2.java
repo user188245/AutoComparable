@@ -3,7 +3,6 @@ package auto.autocomparable.mock;
 import auto.autocomparable.annotation.AutoComparable;
 import auto.autocomparable.annotation.AutoComparableTarget;
 import auto.autocomparable.annotation.Order;
-import jdk.internal.util.ArraysSupport;
 
 import java.util.Comparator;
 import java.util.List;
@@ -26,21 +25,6 @@ public class ValidMockClass2 implements Cloneable{
         this.field3 = field3;
     }
 
-    public static int compare(int[] a, int[] b){
-        if (a == b)
-            return 0;
-        if (a == null || b == null)
-            return a == null ? -1 : 1;
-
-        int i = ArraysSupport.mismatch(a, b,
-                Math.min(a.length, b.length));
-        if (i >= 0) {
-            return Integer.compare(a[i], b[i]);
-        }
-
-        return a.length - b.length;
-    }
-
     public static int compare(List<Integer> a, List<Integer> b){
         if (a == b)
             return 0;
@@ -58,8 +42,8 @@ public class ValidMockClass2 implements Cloneable{
     @AutoComparableTarget(priority = 1, order = Order.ASC)
     public Integer sum(){
         int sum = 0;
-        for(int i : field3){
-            sum += i;
+        for(int n : field3){
+            sum += n;
         }
         return sum;
     }

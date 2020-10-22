@@ -67,6 +67,6 @@ public class ValidMockClass3 implements Cloneable{
 
     @Override
     protected Object clone() throws CloneNotSupportedException {
-        return new ValidMockClass3(field1, field2, field3);
+        return new ValidMockClass3((ValidMockClass1) field1.clone(), field2, field3);
     }
 }

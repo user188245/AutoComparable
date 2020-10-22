@@ -1,8 +1,9 @@
 package auto.autocomparable.mock;
 
+import auto.autocomparable.annotation.AutoComparable;
 import auto.autocomparable.annotation.AutoComparableTarget;
 
-//@AutoComparable
+@AutoComparable
 public class InvalidAutoComparableFieldMockClass2 {
 
 

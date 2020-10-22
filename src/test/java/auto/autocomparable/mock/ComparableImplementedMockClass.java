@@ -1,10 +1,11 @@
 package auto.autocomparable.mock;
 
+import auto.autocomparable.annotation.AutoComparable;
 import auto.autocomparable.annotation.AutoComparableTarget;
 
 import java.util.Objects;
 
-//@AutoComparable
+@AutoComparable
 public class ComparableImplementedMockClass implements Comparable<ComparableImplementedMockClass> {
 
     @AutoComparableTarget(priority = 1)
