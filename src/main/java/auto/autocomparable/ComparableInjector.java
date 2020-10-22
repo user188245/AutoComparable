@@ -97,6 +97,10 @@ public class ComparableInjector extends InterfaceWithGenericTypeInjector {
                     if(e2.getSimpleName().toString().equals(compareSelector)){
                         if(e2 instanceof ExecutableElement){
                             alternativeMethod = (ExecutableElement)e2;
+                            if(alternativeMethod.getTypeParameters().size() > 0){
+                                hold = new AnnotationProcessingException(AutoComparableExceptionCode.ILLEGAL_AUTO_COMPARABLE_TARGET_ARGUMENT, "Generic method is not supported.");
+                                continue;
+                            }
                             if(alternativeMethod.getReturnType().getKind() != TypeKind.INT){
                                 hold = new AnnotationProcessingException(AutoComparableExceptionCode.ILLEGAL_AUTO_COMPARABLE_TARGET_ARGUMENT, "The alternative method must return int.");
                                 continue;
@@ -106,6 +110,7 @@ public class ComparableInjector extends InterfaceWithGenericTypeInjector {
                                 continue;
                             }
                             boolean isError = false;
+                            List<? extends TypeParameterElement> tpeList = alternativeMethod.getTypeParameters();
                             for(VariableElement e3 : alternativeMethod.getParameters()){
                                 if(!annotationProcessorTool.isSubtype(compareTargetType, e3.asType())){
                                     hold = new AnnotationProcessingException(AutoComparableExceptionCode.ILLEGAL_AUTO_COMPARABLE_TARGET_ARGUMENT, "The alternative method has Illegal parameters. Expected Parameter: " + compareTargetType + ", Actual Parameter: " + e3.asType());
@@ -138,7 +143,7 @@ public class ComparableInjector extends InterfaceWithGenericTypeInjector {
                     throw hold;
                 }
             } catch (ClassNotFoundException ex) {
-                throw new AnnotationProcessingException(AutoComparableExceptionCode.ILLEGAL_AUTO_COMPARABLE_TARGET_ARGUMENT, "Can't find a class including alternative method.");
+                throw new AnnotationProcessingException(AutoComparableExceptionCode.ILLEGAL_AUTO_COMPARABLE_TARGET_ARGUMENT, "Can't find an alternative class including alternative method.");
             }
 
         }else{
