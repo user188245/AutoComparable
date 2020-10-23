@@ -1,9 +1,12 @@
 package auto.util.wrapper;
 
-
 import com.sun.source.tree.BlockTree;
 import org.eclipse.jdt.internal.compiler.ast.Block;
 
+/**
+ * @author user188245
+ * @param <T> the blodk syntax tree
+ */
 public class BlockWrapper<T> extends StatementWrapper<T> {
 
     protected BlockWrapper(T data) {

@@ -3,6 +3,10 @@ package auto.util.wrapper;
 import com.sun.source.tree.IfTree;
 import org.eclipse.jdt.internal.compiler.ast.IfStatement;
 
+/**
+ * @author user188245
+ * @param <T> the if syntax tree
+ */
 public class IfWrapper<T> extends StatementWrapper<T> {
 
     protected IfWrapper(T data) {

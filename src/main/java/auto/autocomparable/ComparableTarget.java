@@ -2,6 +2,10 @@ package auto.autocomparable;
 
 import auto.autocomparable.annotation.Order;
 
+/**
+ *
+ * @author user188245
+ */
 class ComparableTarget implements Comparable<ComparableTarget>{
 
     enum Kind{

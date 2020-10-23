@@ -12,6 +12,10 @@ import java.lang.annotation.Annotation;
 import java.util.List;
 import java.util.Set;
 
+/**
+ *  Useful processor tool Providing a modification, creation, extraction of AST(Abstract Syntax Tree)
+ * @author user188245
+ */
 public interface AnnotationProcessorTool {
 
     // creation

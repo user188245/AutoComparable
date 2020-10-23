@@ -7,12 +7,26 @@ import javax.lang.model.type.TypeMirror;
 import java.util.ArrayList;
 import java.util.List;
 
+/**
+ * {@code InterfaceWithGenericTypeInjector} can deal with an interface which require type parameter. (it called generics)
+ *
+ * @author user188245
+ *
+ * @see InterfaceInjector
+ */
 public abstract class InterfaceWithGenericTypeInjector extends InterfaceInjector{
 
     private List<Class<?>> genericTypes;
     private List<TypeElement> genericTypeElements;
 
-    public InterfaceWithGenericTypeInjector(Class<?> inf, List<Class<?>> genericTypes, AnnotationProcessorTool annotationProcessorTool) throws IllegalArgumentException {
+    /**
+     *
+     * @param inf the interface
+     * @param genericTypes the generic type defined at the interface
+     * @param annotationProcessorTool the annotation processor tool which depends on specific compiler.
+     * @throws AnnotationProcessingException throw if generic is incorrect with the type parameters of interface or arguments is invalid.
+     */
+    public InterfaceWithGenericTypeInjector(Class<?> inf, List<Class<?>> genericTypes, AnnotationProcessorTool annotationProcessorTool) throws AnnotationProcessingException {
         super(inf, annotationProcessorTool);
         int countOfGenerics = genericTypes.size();
         if(inf.getTypeParameters().length != countOfGenerics){
@@ -28,6 +42,7 @@ public abstract class InterfaceWithGenericTypeInjector extends InterfaceInjector
             }
         }
     }
+
 
     public List<Class<?>> getGenericTypes() {
         return genericTypes;

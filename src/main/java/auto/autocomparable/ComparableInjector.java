@@ -16,15 +16,29 @@ import javax.lang.model.type.TypeMirror;
 import java.util.ArrayList;
 import java.util.List;
 
+/**
+ * {@code ComparableInjector} provide auto implementation of {@code Comparable} interface using 2 Annotation {@code @AutoComparable}, {@code @AutoComparableTarget}.
+ * <p>
+ * if the name of target class is {@code Boo}, an interface Comparable<Boo> will be implemented.
+ *
+ * @author user188245
+ *
+ * @see AutoComparable
+ * @see AutoComparableTarget
+ * @see Comparable
+ * @see ComparableTarget
+ * @see CompareToMethodGenerator
+ * @see auto.autocomparable.annotation.processing.AutoComparableProcessor
+ */
 public class ComparableInjector extends InterfaceWithGenericTypeInjector {
 
     private TypeMirror comparableType = null;
+//    private ASTPositionCorrector astPositionCorrector;
 
     public ComparableInjector(AnnotationProcessorTool annotationProcessorTool){
         super(Comparable.class, ComparableInjector.createGenericTypes(), annotationProcessorTool);
-        if(comparableType == null){
-            comparableType = annotationProcessorTool.createRawType(annotationProcessorTool.createTypeElement(getInterface()).asType());
-        }
+        this.comparableType = annotationProcessorTool.createRawType(annotationProcessorTool.createTypeElement(getInterface()).asType());
+//        this.astPositionCorrector = ASTPositionCorrectorFactory.instance(annotationProcessorTool);
     }
 
     private static List<Class<?>> createGenericTypes(){
@@ -211,4 +225,5 @@ public class ComparableInjector extends InterfaceWithGenericTypeInjector {
         // 9. Inject the method.
         annotationProcessorTool.injectMethod(classWrapper,methodWrapper);
     }
+
 }

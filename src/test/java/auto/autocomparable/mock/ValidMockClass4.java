@@ -7,7 +7,7 @@ import auto.autocomparable.util.ArrayStaticComparator;
 import java.util.Arrays;
 
 @AutoComparable
-public class ValidMockClass4 implements Cloneable {
+public class ValidMockClass4 implements Cloneable{
 
     @AutoComparableTarget(priority = 1, alternativeCompareMethod = "auto.autocomparable.util.ArrayStaticComparator.compareArrayByInnerJoiningMethod")
     private Integer[] field1;

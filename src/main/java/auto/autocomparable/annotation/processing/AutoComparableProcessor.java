@@ -13,6 +13,10 @@ import javax.tools.Diagnostic;
 import java.util.LinkedHashSet;
 import java.util.Set;
 
+/**
+ * @author user188245
+ * @see ComparableInjector
+ */
 @SupportedSourceVersion(
     SourceVersion.RELEASE_7
 )

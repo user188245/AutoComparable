@@ -1,5 +1,8 @@
 package auto.util;
 
+/**
+ * @author user188245
+ */
 public class AnnotationProcessingException extends IllegalArgumentException {
 
     private final int code;

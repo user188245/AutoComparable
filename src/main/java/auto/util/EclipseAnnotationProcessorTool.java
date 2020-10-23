@@ -15,6 +15,9 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Set;
 
+/**
+ * @author user188245
+ */
 class EclipseAnnotationProcessorTool extends AbstractAnnotationProcessorTool {
 
     private final Factory factory;
@@ -310,6 +313,7 @@ class EclipseAnnotationProcessorTool extends AbstractAnnotationProcessorTool {
         if(isJavaLangClassToken(importReference.tokens)){
             return extractClass(compilationUnitWrapper);
         }
+        Arrays.fill(importReference.sourcePositions, cud.sourceStart);
         if(cud.imports != null){
             ImportReference[] newImports = new ImportReference[cud.imports.length+1];
             System.arraycopy(cud.imports,0,newImports,0,cud.imports.length);
@@ -518,6 +522,8 @@ class EclipseAnnotationProcessorTool extends AbstractAnnotationProcessorTool {
         AbstractMethodDeclaration method = (AbstractMethodDeclaration)methodWrapper.getData();
         method.compilationResult = cls.compilationResult;
         method.scope.parent = cls.scope;
+        method.sourceStart = cls.sourceStart;
+        method.sourceEnd = method.sourceStart;
         if(cls.methods != null){
             AbstractMethodDeclaration[] newMethods = new AbstractMethodDeclaration[cls.methods.length+1];
             System.arraycopy(cls.methods,0,newMethods,0,cls.methods.length);

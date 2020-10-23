@@ -16,6 +16,10 @@ import java.util.EnumSet;
 import java.util.LinkedList;
 import java.util.List;
 
+/**
+ * {@code CompareToMethodGenerator} can create the concrete "CompareTo" method defined by Comparable.
+ * @author user188245
+ */
 class CompareToMethodGenerator implements MethodGenerator {
     private List<ComparableTarget> targets;
     private AnnotationProcessorTool apt;

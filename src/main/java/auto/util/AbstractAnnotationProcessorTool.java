@@ -9,6 +9,9 @@ import javax.lang.model.util.Elements;
 import javax.lang.model.util.Types;
 import java.lang.annotation.Annotation;
 
+/**
+ * @author user188245
+ */
 abstract class AbstractAnnotationProcessorTool implements AnnotationProcessorTool{
 
     private Elements elements;

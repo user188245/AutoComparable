@@ -9,6 +9,7 @@ import com.sun.tools.javac.code.Symbol;
 import com.sun.tools.javac.code.Type;
 import com.sun.tools.javac.processing.JavacProcessingEnvironment;
 import com.sun.tools.javac.tree.JCTree;
+import com.sun.tools.javac.tree.Pretty;
 import com.sun.tools.javac.tree.TreeMaker;
 import com.sun.tools.javac.util.Context;
 import com.sun.tools.javac.util.Name;
@@ -19,6 +20,8 @@ import javax.lang.model.element.Modifier;
 import javax.lang.model.element.TypeElement;
 import javax.lang.model.element.VariableElement;
 import javax.lang.model.type.TypeMirror;
+import java.io.IOException;
+import java.io.Writer;
 import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
@@ -27,11 +30,66 @@ import java.util.Set;
 import static com.sun.tools.javac.code.Symbol.ClassSymbol;
 import static com.sun.tools.javac.tree.JCTree.*;
 
+/**
+ * @author user188245
+ */
 class JavacAnnotationProcessorTool extends AbstractAnnotationProcessorTool {
+
+    private static class JavacASTPositionCorrector extends Pretty{
+
+        private static class PositionWriter extends Writer {
+            PositionWriter(int pos) {
+                this.pos = pos;
+            }
+
+            private int pos;
+
+            @Override
+            public void write(char[] cbuf, int off, int len){
+                pos += Math.min(len, cbuf.length - off);
+            }
+
+            @Override
+            public void flush(){}
+
+            @Override
+            public void close(){}
+        }
+
+        private final PositionWriter positionWriterMirror;
+
+        public static JavacASTPositionCorrector instance(){
+            return new JavacASTPositionCorrector(new PositionWriter(0));
+        }
+
+        private JavacASTPositionCorrector(PositionWriter positionWriter){
+            super(positionWriter,false);
+            positionWriterMirror = positionWriter;
+        }
+
+        @Override
+        public void printExpr(JCTree tree, int prec) throws IOException {
+            tree.setPos(positionWriterMirror.pos);
+            super.printExpr(tree, prec);
+        }
+
+        @SuppressWarnings("all")
+        public void correctPosition(JCTree tree) {
+            try {
+                printExpr(tree);
+            } catch (IOException e) {
+            }
+        }
+
+        public void setPos(int pos){
+            this.positionWriterMirror.pos = pos;
+        }
+    }
 
     private Trees trees;
     private TreeMaker treeMaker;
     private Names names;
+    private final JavacASTPositionCorrector astPosCorrector;
 
     JavacAnnotationProcessorTool(JavacProcessingEnvironment processingEnv) {
         super(processingEnv);
@@ -39,6 +97,7 @@ class JavacAnnotationProcessorTool extends AbstractAnnotationProcessorTool {
         Context cxt = processingEnv.getContext();
         this.treeMaker = TreeMaker.instance(cxt);
         this.names = Names.instance(cxt);
+        this.astPosCorrector = JavacASTPositionCorrector.instance();
     }
 
     @Override
@@ -292,7 +351,11 @@ class JavacAnnotationProcessorTool extends AbstractAnnotationProcessorTool {
         if(jcClassDecl == null){
             throw new AnnotationProcessingException(ExceptionCode.INTERNAL_ERROR, "The class is missing.");
         }
-        defsTmp.addFirst(importWrapper==null?null:(JCTree)importWrapper.getData());
+        if(importWrapper != null){
+            JCImport jcImport = (JCImport) importWrapper.getData();
+            jcImport.pos = jcCompilationUnit.pos;
+            defsTmp.addFirst(jcImport);
+        }
         defsTmp.addFirst(packageDecl);
         defsTmp.addLast(jcClassDecl);
         com.sun.tools.javac.util.List<JCTree> defs = com.sun.tools.javac.util.List.from(defsTmp);
@@ -350,7 +413,10 @@ class JavacAnnotationProcessorTool extends AbstractAnnotationProcessorTool {
     @Override
     public void injectMethod(ClassWrapper classWrapper, MethodWrapper methodWrapper) {
         JCClassDecl jcClassDecl = (JCClassDecl)classWrapper.getData();
-        jcClassDecl.defs = jcClassDecl.defs.append((JCTree)methodWrapper.getData());
+        JCMethodDecl jcMethodDecl = (JCMethodDecl)methodWrapper.getData();
+        astPosCorrector.setPos(jcClassDecl.pos);
+        astPosCorrector.correctPosition(jcMethodDecl);
+        jcClassDecl.defs = jcClassDecl.defs.append(jcMethodDecl);
     }
 
     @Override
@@ -370,9 +436,10 @@ class JavacAnnotationProcessorTool extends AbstractAnnotationProcessorTool {
         return ((JCClassDecl)classWrapper.getData()).sym;
     }
 
-
     private Name name(String s){
         return names.fromString(s);
     }
+
+
 
 }

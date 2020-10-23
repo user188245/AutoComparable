@@ -5,6 +5,9 @@ import org.eclipse.jdt.internal.compiler.apt.dispatch.BaseProcessingEnvImpl;
 
 import javax.annotation.processing.ProcessingEnvironment;
 
+/**
+ * @author user188245
+ */
 public class AnnotationProcessorToolFactory {
 
     public static AnnotationProcessorTool instance(JavacProcessingEnvironment processingEnv){

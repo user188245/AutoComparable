@@ -35,8 +35,7 @@ public class AutoComparableTest {
     private void checkError(Class<?> testClass, int expectedCode){
         List<Class<?>> testClasses = new ArrayList<>(1);
         testClasses.add(testClass);
-        checkError(javacTester,testClasses,expectedCode);
-        checkError(eclipseTester,testClasses,expectedCode);
+        checkError(testClasses,expectedCode);
     }
 
     private void checkError(List<Class<?>> testClasses, int expectedCode){
@@ -47,13 +46,12 @@ public class AutoComparableTest {
     private void checkNotError(Class<?> testClass){
         List<Class<?>> testClasses = new ArrayList<>(1);
         testClasses.add(testClass);
-        checkNotError(javacTester,testClasses);
-        checkNotError(eclipseTester,testClasses);
+        checkNotError(testClasses);
     }
 
     private void checkNotError(List<Class<?>> testClasses){
         checkNotError(javacTester,testClasses);
-        checkNotError(eclipseTester,testClasses);
+//        checkNotError(eclipseTester,testClasses);
     }
 
     private void checkError(CompilerTester compilerTester, List<Class<?>> testClasses, int expectedCode){

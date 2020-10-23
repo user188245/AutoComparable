@@ -1,9 +1,12 @@
 package auto.util.wrapper;
 
-
 import com.sun.source.tree.ClassTree;
 import org.eclipse.jdt.internal.compiler.ast.TypeDeclaration;
 
+/**
+ * @author user188245
+ * @param <T> the class syntax tree
+ */
 public class ClassWrapper<T> extends StatementWrapper<T> {
 
     protected ClassWrapper(T data) {

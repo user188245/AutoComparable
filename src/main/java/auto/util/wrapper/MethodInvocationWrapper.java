@@ -3,6 +3,10 @@ package auto.util.wrapper;
 import com.sun.source.tree.MethodInvocationTree;
 import org.eclipse.jdt.internal.compiler.ast.MessageSend;
 
+/**
+ * @author user188245
+ * @param <T> the method-call syntax tree
+ */
 public class MethodInvocationWrapper<T> extends ExpressionWrapper<T> {
 
     protected MethodInvocationWrapper(T data) {
