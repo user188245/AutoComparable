@@ -27,27 +27,29 @@ import java.lang.annotation.*;
  *
  * @author user188245
  * @see AutoComparable
- *
  */
-@Target({ElementType.FIELD,ElementType.METHOD})
+@Target({ElementType.FIELD, ElementType.METHOD})
 @Retention(RetentionPolicy.CLASS)
 @Documented
-public @interface AutoComparableTarget{
+public @interface AutoComparableTarget {
 
     /**
      * Determine an order of priority. the lowest value is sorted first if isLowPriorityFirst on {@link AutoComparable} is true.
+     *
      * @return the value of priority
      */
     int priority();
 
     /**
      * Determine a way of sort.
+     *
      * @return ascending order if Order.ASC, otherwise reverse order.
      */
     Order order() default Order.ASC;
 
     /**
      * Use an alternative method instead. it must be accessible.
+     *
      * @return a canonical name of method. (i.e. "Integer.compare")
      */
     String alternativeCompareMethod() default "";

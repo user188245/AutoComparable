@@ -4,8 +4,8 @@ import com.sun.source.tree.ClassTree;
 import org.eclipse.jdt.internal.compiler.ast.TypeDeclaration;
 
 /**
- * @author user188245
  * @param <T> the class syntax tree
+ * @author user188245
  */
 public class ClassWrapper<T> extends StatementWrapper<T> {
 
@@ -13,11 +13,11 @@ public class ClassWrapper<T> extends StatementWrapper<T> {
         super(data);
     }
 
-    public static ClassWrapper<ClassTree> from(ClassTree data){
+    public static ClassWrapper<ClassTree> from(ClassTree data) {
         return new ClassWrapper<ClassTree>(data);
     }
 
-    public static ClassWrapper<TypeDeclaration> from(TypeDeclaration data){
+    public static ClassWrapper<TypeDeclaration> from(TypeDeclaration data) {
         return new ClassWrapper<TypeDeclaration>(data);
     }
 

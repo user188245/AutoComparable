@@ -13,7 +13,8 @@ import java.util.List;
 import java.util.Set;
 
 /**
- *  Useful processor tool Providing a modification, creation, extraction of AST(Abstract Syntax Tree)
+ * Useful processor tool Providing a modification, creation, extraction of AST(Abstract Syntax Tree)
+ *
  * @author user188245
  */
 public interface AnnotationProcessorTool {
@@ -31,6 +32,8 @@ public interface AnnotationProcessorTool {
     ImportWrapper createImport(TypeElement e);
 
     VariableWrapper createVariable(VariableElement variableElement, ExpressionWrapper init);
+
+    StatementWrapper createAssignment(VariableElement variableElement, ExpressionWrapper rightExpr);
 
     MethodInvocationWrapper createMethodInvocation(ExpressionWrapper receiver, String selector, List<ExpressionWrapper> args);
 

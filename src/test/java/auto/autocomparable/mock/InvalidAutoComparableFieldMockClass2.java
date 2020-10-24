@@ -11,7 +11,7 @@ public class InvalidAutoComparableFieldMockClass2 {
     }
 
     @AutoComparableTarget(priority = 1)
-    public int invalid(int a){
+    public int invalid(int a) {
         return a;
     }
 

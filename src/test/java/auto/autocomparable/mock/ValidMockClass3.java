@@ -7,7 +7,7 @@ import java.util.Comparator;
 import java.util.Objects;
 
 @AutoComparable(isLowPriorityFirst = false)
-public class ValidMockClass3 implements Cloneable{
+public class ValidMockClass3 implements Cloneable {
 
     @AutoComparableTarget(priority = 100)
     ValidMockClass1 field1;
@@ -48,21 +48,22 @@ public class ValidMockClass3 implements Cloneable{
     }
 
 
-    public static Comparator<ValidMockClass3> getExpectedComparator(){
+    public static Comparator<ValidMockClass3> getExpectedComparator() {
         return new Comparator<ValidMockClass3>() {
             @Override
             public int compare(ValidMockClass3 o1, ValidMockClass3 o2) {
-                return ValidMockClass3.expectedCompare(o1,o2);
+                return ValidMockClass3.expectedCompare(o1, o2);
             }
         };
     }
 
     private static int expectedCompare(ValidMockClass3 o1, ValidMockClass3 o2) {
-        int e1 = o1.field2.ordinal() - o2.field2.ordinal();
-        if(e1 == 0){
-            return ValidMockClass1.expectedCompare(o1.field1,o2.field1);
+        int e1;
+        e1 = o1.field2.ordinal() - o2.field2.ordinal();
+        if (e1 == 0) {
+            e1 = ValidMockClass1.expectedCompare(o1.field1, o2.field1);
         }
-        return 0;
+        return e1;
     }
 
     @Override

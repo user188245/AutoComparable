@@ -3,17 +3,18 @@ package auto.autocomparable;
 import auto.autocomparable.annotation.Order;
 
 /**
+ * {@code ComparableTarget} is The minimum variable unit of sort.
  *
  * @author user188245
  */
-class ComparableTarget implements Comparable<ComparableTarget>{
+class ComparableTarget implements Comparable<ComparableTarget> {
 
-    enum Kind{
+    enum Kind {
         Field,
         Method
     }
 
-    enum MethodType{
+    enum MethodType {
         compareTo,
         compare
     }
@@ -57,15 +58,15 @@ class ComparableTarget implements Comparable<ComparableTarget>{
         this.order = order;
         this.compareTarget = compareTarget;
         this.compareReceiver = compareReceiver;
-        if(compareSelector != null){
+        if (compareSelector != null) {
             this.compareSelector = compareSelector;
-        }else{
+        } else {
             this.compareSelector = methodType.name();
         }
     }
 
     @Override
     public int compareTo(ComparableTarget o) {
-        return Integer.compare(this.priority,o.priority);
+        return Integer.compare(this.priority, o.priority);
     }
 }

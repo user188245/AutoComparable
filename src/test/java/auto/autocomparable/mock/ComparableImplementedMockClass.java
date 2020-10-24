@@ -30,7 +30,7 @@ public class ComparableImplementedMockClass implements Comparable<ComparableImpl
 
     @Override
     public int compareTo(ComparableImplementedMockClass o) {
-        return Integer.compare(this.value,o.value);
+        return Integer.compare(this.value, o.value);
     }
 
     @Override

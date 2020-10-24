@@ -18,7 +18,7 @@ import java.util.Set;
  * @see ComparableInjector
  */
 @SupportedSourceVersion(
-    SourceVersion.RELEASE_7
+        SourceVersion.RELEASE_7
 )
 public class AutoComparableProcessor extends AbstractProcessor {
 
@@ -43,10 +43,10 @@ public class AutoComparableProcessor extends AbstractProcessor {
 
     @Override
     public boolean process(Set<? extends TypeElement> annotations, RoundEnvironment roundEnv) {
-        for(Element e : roundEnv.getElementsAnnotatedWith(AutoComparable.class)){
-            try{
-                comparableInjector.process(apt.extractCompilationUnit((TypeElement)e));
-            }catch(RuntimeException err){
+        for (Element e : roundEnv.getElementsAnnotatedWith(AutoComparable.class)) {
+            try {
+                comparableInjector.process(apt.extractCompilationUnit((TypeElement) e));
+            } catch (RuntimeException err) {
                 messager.printMessage(Diagnostic.Kind.ERROR, err.getMessage(), e);
             }
         }

@@ -32,39 +32,41 @@ public class AutoComparableTest {
         eclipseTester = new CompilerTester(new EclipseCompiler()).setProcessors(processors);
         javacTester = new CompilerTester(ToolProvider.getSystemJavaCompiler()).setProcessors(processors);
     }
-    private void checkError(Class<?> testClass, int expectedCode){
+
+    private void checkError(Class<?> testClass, int expectedCode) {
         List<Class<?>> testClasses = new ArrayList<>(1);
         testClasses.add(testClass);
-        checkError(testClasses,expectedCode);
+        checkError(testClasses, expectedCode);
     }
 
-    private void checkError(List<Class<?>> testClasses, int expectedCode){
-        checkError(javacTester,testClasses,expectedCode);
-        checkError(eclipseTester,testClasses,expectedCode);
+    private void checkError(List<Class<?>> testClasses, int expectedCode) {
+        checkError(javacTester, testClasses, expectedCode);
+        checkError(eclipseTester, testClasses, expectedCode);
     }
 
-    private void checkNotError(Class<?> testClass){
+    private void checkNotError(Class<?> testClass) {
         List<Class<?>> testClasses = new ArrayList<>(1);
         testClasses.add(testClass);
         checkNotError(testClasses);
     }
 
-    private void checkNotError(List<Class<?>> testClasses){
-        checkNotError(javacTester,testClasses);
-//        checkNotError(eclipseTester,testClasses);
+    private void checkNotError(List<Class<?>> testClasses) {
+        checkNotError(javacTester, testClasses);
+        checkNotError(eclipseTester, testClasses);
     }
 
-    private void checkError(CompilerTester compilerTester, List<Class<?>> testClasses, int expectedCode){
+    private void checkError(CompilerTester compilerTester, List<Class<?>> testClasses, int expectedCode) {
         try {
             boolean passed = false;
             List<Diagnostic<? extends JavaFileObject>> diagnostics = compilerTester.doCompiles(testClasses);
-            for(Diagnostic<? extends JavaFileObject> d : diagnostics){
-                if(d.getKind() == Diagnostic.Kind.ERROR){
-                    if(d.getMessage(Locale.getDefault()).contains(AnnotationProcessingException.getCodeWithString(expectedCode)))
+            for (Diagnostic<? extends JavaFileObject> d : diagnostics) {
+                if (d.getKind() == Diagnostic.Kind.ERROR) {
+                    if (d.getMessage(Locale.getDefault()).contains(AnnotationProcessingException.getCodeWithString(expectedCode)))
                         passed = true;
-                };
+                }
+                ;
             }
-            if(!passed){
+            if (!passed) {
                 fail("No Error during compile.");
             }
         } catch (IOException e) {
@@ -72,13 +74,14 @@ public class AutoComparableTest {
         }
     }
 
-    private void checkNotError(CompilerTester compilerTester, List<Class<?>> testClasses){
+    private void checkNotError(CompilerTester compilerTester, List<Class<?>> testClasses) {
         try {
             List<Diagnostic<? extends JavaFileObject>> diagnostics = compilerTester.doCompiles(testClasses);
-            for(Diagnostic<? extends JavaFileObject> d : diagnostics){
-                if(d.getKind() == Diagnostic.Kind.ERROR){
+            for (Diagnostic<? extends JavaFileObject> d : diagnostics) {
+                if (d.getKind() == Diagnostic.Kind.ERROR) {
                     fail(d.getMessage(Locale.getDefault()));
-                };
+                }
+                ;
             }
         } catch (IOException e) {
             fail("IOException");

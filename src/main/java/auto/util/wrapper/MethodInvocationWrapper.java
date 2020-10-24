@@ -4,8 +4,8 @@ import com.sun.source.tree.MethodInvocationTree;
 import org.eclipse.jdt.internal.compiler.ast.MessageSend;
 
 /**
- * @author user188245
  * @param <T> the method-call syntax tree
+ * @author user188245
  */
 public class MethodInvocationWrapper<T> extends ExpressionWrapper<T> {
 
@@ -13,11 +13,11 @@ public class MethodInvocationWrapper<T> extends ExpressionWrapper<T> {
         super(data);
     }
 
-    public static MethodInvocationWrapper<MethodInvocationTree> from(MethodInvocationTree data){
+    public static MethodInvocationWrapper<MethodInvocationTree> from(MethodInvocationTree data) {
         return new MethodInvocationWrapper<MethodInvocationTree>(data);
     }
 
-    public static MethodInvocationWrapper<MessageSend> from(MessageSend data){
+    public static MethodInvocationWrapper<MessageSend> from(MessageSend data) {
         return new MethodInvocationWrapper<MessageSend>(data);
     }
 }

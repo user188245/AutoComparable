@@ -35,7 +35,7 @@ import static com.sun.tools.javac.tree.JCTree.*;
  */
 class JavacAnnotationProcessorTool extends AbstractAnnotationProcessorTool {
 
-    private static class JavacASTPositionCorrector extends Pretty{
+    private static class JavacASTPositionCorrector extends Pretty {
 
         private static class PositionWriter extends Writer {
             PositionWriter(int pos) {
@@ -45,25 +45,27 @@ class JavacAnnotationProcessorTool extends AbstractAnnotationProcessorTool {
             private int pos;
 
             @Override
-            public void write(char[] cbuf, int off, int len){
+            public void write(char[] cbuf, int off, int len) {
                 pos += Math.min(len, cbuf.length - off);
             }
 
             @Override
-            public void flush(){}
+            public void flush() {
+            }
 
             @Override
-            public void close(){}
+            public void close() {
+            }
         }
 
         private final PositionWriter positionWriterMirror;
 
-        public static JavacASTPositionCorrector instance(){
+        public static JavacASTPositionCorrector instance() {
             return new JavacASTPositionCorrector(new PositionWriter(0));
         }
 
-        private JavacASTPositionCorrector(PositionWriter positionWriter){
-            super(positionWriter,false);
+        private JavacASTPositionCorrector(PositionWriter positionWriter) {
+            super(positionWriter, false);
             positionWriterMirror = positionWriter;
         }
 
@@ -81,7 +83,7 @@ class JavacAnnotationProcessorTool extends AbstractAnnotationProcessorTool {
             }
         }
 
-        public void setPos(int pos){
+        public void setPos(int pos) {
             this.positionWriterMirror.pos = pos;
         }
     }
@@ -102,28 +104,28 @@ class JavacAnnotationProcessorTool extends AbstractAnnotationProcessorTool {
 
     @Override
     public VariableElement createVariableElement(Set<Modifier> modifiers, TypeMirror varType, String varName, TypeElement from) {
-        return new Symbol.VarSymbol(getModifierFlag(modifiers), name(varName), (Type)varType, (Symbol)from);
+        return new Symbol.VarSymbol(getModifierFlag(modifiers), name(varName), (Type) varType, (Symbol) from);
     }
 
     @Override
     public VariableElement createParameterElement(TypeMirror varType, String varName, TypeElement from) {
-        return new Symbol.VarSymbol(Flags.PARAMETER, name(varName), (Type)varType, (Symbol)from);
+        return new Symbol.VarSymbol(Flags.PARAMETER, name(varName), (Type) varType, (Symbol) from);
     }
 
     @Override
     public ImportWrapper<ImportTree> createImport(TypeElement e) {
-        ClassSymbol classSymbol = (ClassSymbol)e;
-        return ImportWrapper.from(treeMaker.Import(treeMaker.QualIdent(classSymbol),false));
+        ClassSymbol classSymbol = (ClassSymbol) e;
+        return ImportWrapper.from(treeMaker.Import(treeMaker.QualIdent(classSymbol), false));
     }
 
     private JCModifiers createModifier(List<AnnotationWrapper> annotations, Set<Modifier> modifiers) {
         com.sun.tools.javac.util.List<JCAnnotation> expr;
-        if(annotations == null){
+        if (annotations == null) {
             expr = com.sun.tools.javac.util.List.nil();
-        }else{
+        } else {
             List<JCAnnotation> annotationTrees = new LinkedList<JCAnnotation>();
-            for(AnnotationWrapper aw : annotations){
-                annotationTrees.add((JCAnnotation)aw.getData());
+            for (AnnotationWrapper aw : annotations) {
+                annotationTrees.add((JCAnnotation) aw.getData());
             }
             expr = com.sun.tools.javac.util.List.from(annotationTrees);
         }
@@ -132,38 +134,46 @@ class JavacAnnotationProcessorTool extends AbstractAnnotationProcessorTool {
 
     @Override
     public VariableWrapper<VariableTree> createVariable(VariableElement variableElement, ExpressionWrapper init) {
-        return VariableWrapper.from(treeMaker.VarDef((Symbol.VarSymbol)variableElement, init==null?null:(JCExpression)init.getData()));
+        return VariableWrapper.from(treeMaker.VarDef((Symbol.VarSymbol) variableElement, init == null ? null : (JCExpression) init.getData()));
+    }
+
+    @Override
+    public StatementWrapper createAssignment(VariableElement variableElement, ExpressionWrapper rightExpr) {
+        if (variableElement == null || rightExpr == null) {
+            throw new AnnotationProcessingException(ExceptionCode.INTERNAL_ERROR, "The Argument must not be null.");
+        }
+        return StatementWrapper.from(treeMaker.Assignment((Symbol.VarSymbol) variableElement, (JCExpression) rightExpr.getData()));
     }
 
     @Override
     public MethodInvocationWrapper<MethodInvocationTree> createMethodInvocation(ExpressionWrapper receiver, String selector, List<ExpressionWrapper> args) {
         com.sun.tools.javac.util.List<JCExpression> expr;
-        if(args != null){
+        if (args != null) {
             List<JCExpression> exprList = new LinkedList<JCExpression>();
-            for(ExpressionWrapper ew : args){
+            for (ExpressionWrapper ew : args) {
                 exprList.add((JCExpression) ew.getData());
             }
             expr = com.sun.tools.javac.util.List.from(exprList);
-        }else{
+        } else {
             expr = com.sun.tools.javac.util.List.nil();
         }
 
-        JCExpression method = (receiver==null)? (JCExpression)createMemberSelect(selector).getData() :(JCExpression)createMemberSelect(receiver,selector).getData();
+        JCExpression method = (receiver == null) ? (JCExpression) createMemberSelect(selector).getData() : (JCExpression) createMemberSelect(receiver, selector).getData();
         return MethodInvocationWrapper.from(treeMaker.Apply(com.sun.tools.javac.util.List.<JCExpression>nil(), method, expr));
     }
 
     @Override
     public ReturnWrapper<ReturnTree> createReturn(ExpressionWrapper expr) {
-        return ReturnWrapper.from(treeMaker.Return(expr==null?null:(JCExpression) expr.getData()));
+        return ReturnWrapper.from(treeMaker.Return(expr == null ? null : (JCExpression) expr.getData()));
     }
 
     @Override
     public IfWrapper<IfTree> createIf(ExpressionWrapper condExpr, StatementWrapper thenExpr, StatementWrapper elseExpr) {
-        return IfWrapper.from(treeMaker.If((JCExpression)condExpr.getData(), thenExpr==null?null:(JCStatement)thenExpr.getData(), elseExpr==null?null:(JCStatement)elseExpr.getData()));
+        return IfWrapper.from(treeMaker.If((JCExpression) condExpr.getData(), thenExpr == null ? null : (JCStatement) thenExpr.getData(), elseExpr == null ? null : (JCStatement) elseExpr.getData()));
     }
 
-    private Tag toTag(BinaryOperator binaryOperator){
-        switch(binaryOperator){
+    private Tag toTag(BinaryOperator binaryOperator) {
+        switch (binaryOperator) {
             case EQ:
                 return Tag.EQ;
             case GE:
@@ -209,25 +219,25 @@ class JavacAnnotationProcessorTool extends AbstractAnnotationProcessorTool {
 
     @Override
     public BinaryWrapper<BinaryTree> createBinaryOperation(ExpressionWrapper leftExpr, ExpressionWrapper rightExpr, BinaryOperator binaryOperator) {
-        return BinaryWrapper.from(treeMaker.Binary(toTag(binaryOperator), leftExpr==null?null:(JCExpression)leftExpr.getData(), rightExpr==null?null:(JCExpression)rightExpr.getData()));
+        return BinaryWrapper.from(treeMaker.Binary(toTag(binaryOperator), leftExpr == null ? null : (JCExpression) leftExpr.getData(), rightExpr == null ? null : (JCExpression) rightExpr.getData()));
     }
 
     @Override
     public MethodWrapper<MethodTree> createMethod(List<AnnotationWrapper> annotations, Set<Modifier> modifiers, String name, TypeMirror returnType, List<VariableElement> params, List<TypeMirror> thrown, BlockWrapper block, TypeElement from) {
         List<TypeMirror> paramTypes = new LinkedList<TypeMirror>();
-        for(VariableElement ve : params){
+        for (VariableElement ve : params) {
             paramTypes.add(ve.asType());
         }
         com.sun.tools.javac.util.List<Type> tParams = com.sun.tools.javac.util.List.convert(Type.class, com.sun.tools.javac.util.List.from(paramTypes));
         com.sun.tools.javac.util.List<Type> tThrown;
-        if(thrown != null){
+        if (thrown != null) {
             tThrown = com.sun.tools.javac.util.List.convert(Type.class, com.sun.tools.javac.util.List.from(thrown));
-        }else{
+        } else {
             tThrown = com.sun.tools.javac.util.List.nil();
         }
         Type.MethodType methodType = new Type.MethodType(
                 tParams,
-                (Type)returnType,
+                (Type) returnType,
                 tThrown,
                 null
         );
@@ -235,39 +245,39 @@ class JavacAnnotationProcessorTool extends AbstractAnnotationProcessorTool {
                 getModifierFlag(modifiers),
                 name(name),
                 methodType,
-                (ClassSymbol)from);
+                (ClassSymbol) from);
         method.params = com.sun.tools.javac.util.List.convert(Symbol.VarSymbol.class, com.sun.tools.javac.util.List.from(params));
-        JCTree.JCMethodDecl jcMethodDecl = treeMaker.MethodDef((Symbol.MethodSymbol)method,block==null?null:(JCBlock)block.getData());
+        JCTree.JCMethodDecl jcMethodDecl = treeMaker.MethodDef((Symbol.MethodSymbol) method, block == null ? null : (JCBlock) block.getData());
         jcMethodDecl.mods = createModifier(annotations, method.getModifiers());
         return MethodWrapper.from(jcMethodDecl);
     }
 
     @Override
     public BlockWrapper<BlockTree> createBlock(Set<Modifier> modifiers, List<StatementWrapper> statements) {
-        if(statements == null){
+        if (statements == null) {
             throw new AnnotationProcessingException(ExceptionCode.INTERNAL_ERROR, "The statements in the block must not be null.");
         }
         List<JCStatement> statementList = new LinkedList<JCStatement>();
-        for(StatementWrapper sw : statements){
-            statementList.add((JCStatement)sw.getData());
+        for (StatementWrapper sw : statements) {
+            statementList.add((JCStatement) sw.getData());
         }
 
-        return BlockWrapper.from(treeMaker.Block(getModifierFlag(modifiers),com.sun.tools.javac.util.List.from(statementList)));
+        return BlockWrapper.from(treeMaker.Block(getModifierFlag(modifiers), com.sun.tools.javac.util.List.from(statementList)));
     }
 
     @Override
     public ExpressionWrapper<ExpressionTree> createMemberSelect(String fullPath) {
         String[] stringSplitAsDelimiter = fullPath.split("\\.");
         JCExpression member = treeMaker.Ident(name(stringSplitAsDelimiter[0]));
-        for(int i=1; i<stringSplitAsDelimiter.length; i++){
-            member = treeMaker.Select(member,name(stringSplitAsDelimiter[i]));
+        for (int i = 1; i < stringSplitAsDelimiter.length; i++) {
+            member = treeMaker.Select(member, name(stringSplitAsDelimiter[i]));
         }
         return ExpressionWrapper.from(member);
     }
 
     @Override
     public ExpressionWrapper<ExpressionTree> createMemberSelect(ExpressionWrapper start, String fullPath) {
-        JCExpression member = start==null?null:(JCExpression)start.getData();
+        JCExpression member = start == null ? null : (JCExpression) start.getData();
         for (String s : fullPath.split("\\.")) {
             member = treeMaker.Select(member, name(s));
         }
@@ -281,16 +291,16 @@ class JavacAnnotationProcessorTool extends AbstractAnnotationProcessorTool {
 
     @Override
     public AnnotationWrapper<AnnotationTree> createOverrideAnnotation() {
-        return AnnotationWrapper.from(treeMaker.Annotation(new Attribute.Compound((Type)createTypeElement(Override.class).asType(), com.sun.tools.javac.util.List.<Pair<Symbol.MethodSymbol, Attribute>>nil())));
+        return AnnotationWrapper.from(treeMaker.Annotation(new Attribute.Compound((Type) createTypeElement(Override.class).asType(), com.sun.tools.javac.util.List.<Pair<Symbol.MethodSymbol, Attribute>>nil())));
     }
 
-    private long getModifierFlag(Set<Modifier> modifiers){
+    private long getModifierFlag(Set<Modifier> modifiers) {
         long result = 0;
-        if(modifiers == null){
+        if (modifiers == null) {
             return result;
         }
-        for(Modifier m : modifiers){
-            switch(m){
+        for (Modifier m : modifiers) {
+            switch (m) {
                 case ABSTRACT:
                     result |= Flags.ABSTRACT;
                     break;
@@ -331,27 +341,27 @@ class JavacAnnotationProcessorTool extends AbstractAnnotationProcessorTool {
 
     @Override
     public ClassWrapper<ClassTree> injectImport(CompilationUnitWrapper compilationUnitWrapper, ImportWrapper importWrapper) {
-        JCCompilationUnit jcCompilationUnit = (JCCompilationUnit)compilationUnitWrapper.getData();
+        JCCompilationUnit jcCompilationUnit = (JCCompilationUnit) compilationUnitWrapper.getData();
         LinkedList<JCTree> defsTmp = new LinkedList<JCTree>();
 
         JCPackageDecl packageDecl = null;
         JCClassDecl jcClassDecl = null;
 
-        for(JCTree jctree : jcCompilationUnit.defs){
-            if(jctree instanceof JCPackageDecl){
-                packageDecl = (JCPackageDecl)jctree;
-            }else if(jctree instanceof JCClassDecl){
+        for (JCTree jctree : jcCompilationUnit.defs) {
+            if (jctree instanceof JCPackageDecl) {
+                packageDecl = (JCPackageDecl) jctree;
+            } else if (jctree instanceof JCClassDecl) {
                 jcClassDecl = (JCClassDecl) jctree;
-            }else if(jctree instanceof JCImport){
+            } else if (jctree instanceof JCImport) {
                 defsTmp.addFirst(jctree);
-            }else{
+            } else {
                 defsTmp.addLast(jctree);
             }
         }
-        if(jcClassDecl == null){
+        if (jcClassDecl == null) {
             throw new AnnotationProcessingException(ExceptionCode.INTERNAL_ERROR, "The class is missing.");
         }
-        if(importWrapper != null){
+        if (importWrapper != null) {
             JCImport jcImport = (JCImport) importWrapper.getData();
             jcImport.pos = jcCompilationUnit.pos;
             defsTmp.addFirst(jcImport);
@@ -366,13 +376,13 @@ class JavacAnnotationProcessorTool extends AbstractAnnotationProcessorTool {
 
     private JCExpression createIdentWithGenerics(TypeElement infType, List<TypeElement> genericTypes) {
         JCExpression implementsUnit = createIdent(infType);
-        Symbol sym = ((JCIdent)implementsUnit).sym;
-        if(!(sym.getTypeParameters().isEmpty())){
+        Symbol sym = ((JCIdent) implementsUnit).sym;
+        if (!(sym.getTypeParameters().isEmpty())) {
             List<JCExpression> list = new ArrayList<JCExpression>(genericTypes.size());
-            for(TypeElement te : genericTypes){
+            for (TypeElement te : genericTypes) {
                 list.add(createIdent(te));
             }
-            implementsUnit = treeMaker.TypeApply(implementsUnit,com.sun.tools.javac.util.List.from(list));
+            implementsUnit = treeMaker.TypeApply(implementsUnit, com.sun.tools.javac.util.List.from(list));
         }
         return implementsUnit;
     }
@@ -384,36 +394,36 @@ class JavacAnnotationProcessorTool extends AbstractAnnotationProcessorTool {
 
     @Override
     public void injectInterface(ClassWrapper classWrapper, TypeElement infType, List<TypeElement> genericTypes) {
-        injectInterface((JCClassDecl)classWrapper.getData(),infType, genericTypes);
+        injectInterface((JCClassDecl) classWrapper.getData(), infType, genericTypes);
     }
 
-    private void injectInterface(JCClassDecl jcClassDecl, TypeElement infType, List<TypeElement> genericTypes){
-        JCExpression implementsUnit = createIdentWithGenerics(infType,genericTypes);
+    private void injectInterface(JCClassDecl jcClassDecl, TypeElement infType, List<TypeElement> genericTypes) {
+        JCExpression implementsUnit = createIdentWithGenerics(infType, genericTypes);
         com.sun.tools.javac.util.List<JCTree.JCExpression> listImplementing = jcClassDecl.implementing.append(implementsUnit);
         Symbol sym;
-        if(implementsUnit instanceof JCIdent){
-            sym = ((JCIdent)implementsUnit).sym;
-        }else if(implementsUnit instanceof JCTypeApply){
-            sym = ((JCIdent)(((JCTypeApply)implementsUnit).clazz)).sym;
-        }else{
+        if (implementsUnit instanceof JCIdent) {
+            sym = ((JCIdent) implementsUnit).sym;
+        } else if (implementsUnit instanceof JCTypeApply) {
+            sym = ((JCIdent) (((JCTypeApply) implementsUnit).clazz)).sym;
+        } else {
             throw new IllegalArgumentException();
         }
         jcClassDecl.implementing = null;
         jcClassDecl.implementing = listImplementing;
         com.sun.tools.javac.util.List<Type> listInterfacesField = jcClassDecl.sym.getInterfaces().append(sym.asType());
-        ((Type.ClassType)jcClassDecl.sym.type).interfaces_field = null;
-        ((Type.ClassType)jcClassDecl.sym.type).interfaces_field = listInterfacesField;
-        ((Type.ClassType)jcClassDecl.sym.type).all_interfaces_field = listInterfacesField;
+        ((Type.ClassType) jcClassDecl.sym.type).interfaces_field = null;
+        ((Type.ClassType) jcClassDecl.sym.type).interfaces_field = listInterfacesField;
+        ((Type.ClassType) jcClassDecl.sym.type).all_interfaces_field = listInterfacesField;
     }
 
-    private JCExpression createIdent(TypeElement te){
-        return treeMaker.Ident((Symbol)te);
+    private JCExpression createIdent(TypeElement te) {
+        return treeMaker.Ident((Symbol) te);
     }
 
     @Override
     public void injectMethod(ClassWrapper classWrapper, MethodWrapper methodWrapper) {
-        JCClassDecl jcClassDecl = (JCClassDecl)classWrapper.getData();
-        JCMethodDecl jcMethodDecl = (JCMethodDecl)methodWrapper.getData();
+        JCClassDecl jcClassDecl = (JCClassDecl) classWrapper.getData();
+        JCMethodDecl jcMethodDecl = (JCMethodDecl) methodWrapper.getData();
         astPosCorrector.setPos(jcClassDecl.pos);
         astPosCorrector.correctPosition(jcMethodDecl);
         jcClassDecl.defs = jcClassDecl.defs.append(jcMethodDecl);
@@ -421,9 +431,9 @@ class JavacAnnotationProcessorTool extends AbstractAnnotationProcessorTool {
 
     @Override
     public ClassWrapper<ClassTree> extractClass(CompilationUnitWrapper compilationUnitWrapper) {
-        List<? extends Tree> list = ((CompilationUnitTree)compilationUnitWrapper.getData()).getTypeDecls();
-        Tree tree = list.get(list.size()-1);
-        return ClassWrapper.from((ClassTree)tree);
+        List<? extends Tree> list = ((CompilationUnitTree) compilationUnitWrapper.getData()).getTypeDecls();
+        Tree tree = list.get(list.size() - 1);
+        return ClassWrapper.from((ClassTree) tree);
     }
 
     @Override
@@ -433,13 +443,11 @@ class JavacAnnotationProcessorTool extends AbstractAnnotationProcessorTool {
 
     @Override
     public TypeElement extractTypeElement(ClassWrapper classWrapper) {
-        return ((JCClassDecl)classWrapper.getData()).sym;
+        return ((JCClassDecl) classWrapper.getData()).sym;
     }
 
-    private Name name(String s){
+    private Name name(String s) {
         return names.fromString(s);
     }
-
-
 
 }

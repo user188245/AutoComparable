@@ -4,8 +4,8 @@ import com.sun.source.tree.AnnotationTree;
 import org.eclipse.jdt.internal.compiler.ast.Annotation;
 
 /**
- * @author user188245
  * @param <T> the annotation syntax tree
+ * @author user188245
  */
 public class AnnotationWrapper<T> extends ExpressionWrapper<T> {
 
@@ -13,11 +13,11 @@ public class AnnotationWrapper<T> extends ExpressionWrapper<T> {
         super(data);
     }
 
-    public static AnnotationWrapper<AnnotationTree> from(AnnotationTree data){
+    public static AnnotationWrapper<AnnotationTree> from(AnnotationTree data) {
         return new AnnotationWrapper<AnnotationTree>(data);
     }
 
-    public static AnnotationWrapper<Annotation> from(Annotation data){
+    public static AnnotationWrapper<Annotation> from(Annotation data) {
         return new AnnotationWrapper<Annotation>(data);
     }
 }

@@ -11,7 +11,7 @@ public class InvalidAutoComparableTargetParamMockClass2 {
     @AutoComparableTarget(priority = 1, alternativeCompareMethod = "invalidCompare")
     int[] arrValue;
 
-    public int invalidCompare(long[] o1, long[] o2){
+    public int invalidCompare(long[] o1, long[] o2) {
         return 0;
     }
 

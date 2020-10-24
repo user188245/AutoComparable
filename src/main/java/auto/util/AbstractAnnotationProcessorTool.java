@@ -12,7 +12,7 @@ import java.lang.annotation.Annotation;
 /**
  * @author user188245
  */
-abstract class AbstractAnnotationProcessorTool implements AnnotationProcessorTool{
+abstract class AbstractAnnotationProcessorTool implements AnnotationProcessorTool {
 
     private Elements elements;
     private Types types;
@@ -29,16 +29,16 @@ abstract class AbstractAnnotationProcessorTool implements AnnotationProcessorToo
 
     @Override
     public boolean isSameType(TypeMirror t1, TypeMirror t2) {
-        return types.isSameType(t1,t2);
+        return types.isSameType(t1, t2);
     }
 
     @Override
     public boolean isSubtype(TypeMirror t1, TypeMirror t2) {
-        return types.isSubtype(t1,t2);
+        return types.isSubtype(t1, t2);
     }
 
     @Override
-    public TypeMirror createRawType(TypeMirror typeWithGenerics){
+    public TypeMirror createRawType(TypeMirror typeWithGenerics) {
         return types.erasure(typeWithGenerics);
     }
 
@@ -53,14 +53,14 @@ abstract class AbstractAnnotationProcessorTool implements AnnotationProcessorToo
     }
 
     @Override
-    public Element asElement(TypeMirror tm){
+    public Element asElement(TypeMirror tm) {
         return types.asElement(tm);
     }
 
     @Override
-    public Annotation extractAnnotations(TypeMirror type, Class<? extends Annotation> annotation){
+    public Annotation extractAnnotations(TypeMirror type, Class<? extends Annotation> annotation) {
         Element e = types.asElement(type);
-        return e==null?null:e.getAnnotation(annotation);
+        return e == null ? null : e.getAnnotation(annotation);
     }
 
 }

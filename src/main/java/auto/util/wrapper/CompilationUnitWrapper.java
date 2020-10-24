@@ -4,8 +4,8 @@ import com.sun.source.tree.CompilationUnitTree;
 import org.eclipse.jdt.internal.compiler.ast.CompilationUnitDeclaration;
 
 /**
- * @author user188245
  * @param <T> the compilation unit syntax tree
+ * @author user188245
  */
 public class CompilationUnitWrapper<T> extends ASTWrapper<T> {
 
@@ -13,11 +13,11 @@ public class CompilationUnitWrapper<T> extends ASTWrapper<T> {
         super(data);
     }
 
-    public static CompilationUnitWrapper<CompilationUnitTree> from(CompilationUnitTree data){
+    public static CompilationUnitWrapper<CompilationUnitTree> from(CompilationUnitTree data) {
         return new CompilationUnitWrapper<CompilationUnitTree>(data);
     }
 
-    public static CompilationUnitWrapper<CompilationUnitDeclaration> from(CompilationUnitDeclaration data){
+    public static CompilationUnitWrapper<CompilationUnitDeclaration> from(CompilationUnitDeclaration data) {
         return new CompilationUnitWrapper<CompilationUnitDeclaration>(data);
     }
 

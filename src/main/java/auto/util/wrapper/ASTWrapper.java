@@ -4,8 +4,8 @@ import com.sun.source.tree.Tree;
 import org.eclipse.jdt.internal.compiler.ast.ASTNode;
 
 /**
- * @author user188245
  * @param <T> the abstract syntax tree
+ * @author user188245
  */
 public class ASTWrapper<T> extends Wrapper<T> {
 
@@ -13,11 +13,11 @@ public class ASTWrapper<T> extends Wrapper<T> {
         super(data);
     }
 
-    public static ASTWrapper<Tree> from(Tree data){
+    public static ASTWrapper<Tree> from(Tree data) {
         return new ASTWrapper<Tree>(data);
     }
 
-    public static ASTWrapper<ASTNode> from(ASTNode data){
+    public static ASTWrapper<ASTNode> from(ASTNode data) {
         return new ASTWrapper<ASTNode>(data);
     }
 

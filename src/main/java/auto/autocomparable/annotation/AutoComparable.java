@@ -81,6 +81,7 @@ public @interface AutoComparable {
 
     /**
      * Determine what {@link AutoComparableTarget} variable should be sorted first using a priority value.
+     *
      * @return true if the lowest priority target is sorted first, otherwise false.
      */
     boolean isLowPriorityFirst() default true;

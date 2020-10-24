@@ -4,8 +4,8 @@ import com.sun.source.tree.BlockTree;
 import org.eclipse.jdt.internal.compiler.ast.Block;
 
 /**
- * @author user188245
  * @param <T> the blodk syntax tree
+ * @author user188245
  */
 public class BlockWrapper<T> extends StatementWrapper<T> {
 
@@ -13,11 +13,11 @@ public class BlockWrapper<T> extends StatementWrapper<T> {
         super(data);
     }
 
-    public static BlockWrapper<BlockTree> from(BlockTree data){
+    public static BlockWrapper<BlockTree> from(BlockTree data) {
         return new BlockWrapper<BlockTree>(data);
     }
 
-    public static BlockWrapper<Block> from(Block data){
+    public static BlockWrapper<Block> from(Block data) {
         return new BlockWrapper<Block>(data);
     }
 

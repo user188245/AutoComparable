@@ -5,6 +5,7 @@ package auto.util.wrapper;
  * <p>
  * The class belongs to the group can have same responsibility with the other class implementing incompatible interface.
  * <p>
+ *
  * @param <T> the real type of wrapper class.
  */
 public abstract class Wrapper<T> {

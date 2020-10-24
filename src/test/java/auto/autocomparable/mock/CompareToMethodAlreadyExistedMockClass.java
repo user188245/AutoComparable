@@ -29,6 +29,6 @@ public class CompareToMethodAlreadyExistedMockClass {
     }
 
     public int compareTo(CompareToMethodAlreadyExistedMockClass o) {
-        return Integer.compare(this.value,o.value);
+        return Integer.compare(this.value, o.value);
     }
 }
