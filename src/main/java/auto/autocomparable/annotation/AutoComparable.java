@@ -16,8 +16,60 @@ import java.lang.annotation.*;
  * <p>
  * {@code @AutoComparable} is only supported on "class". not supported on "interface" or "enum"
  * <p>
- * The Sorting order of {@code @AutoComparable} is determined by the argument {@code "isLowPriorityFirst"}.
- * if the argument is true, then lowest priority of {@link AutoComparableTarget} will be sorted first. (otherwise highest priority first).
+ * The Sorting order of {@code @AutoComparable} is determined by the argument {@link AutoComparable#isLowPriorityFirst}.
+ * if the argument is true, then lowest {@link AutoComparableTarget#priority} of {@link AutoComparableTarget} will be sorted first. (otherwise highest priority first).
+ * <p>
+ * The Sample Code
+ * <blockquote><pre>
+ * import auto.autocomparable.annotation.AutoComparable;
+ * import auto.autocomparable.annotation.AutoComparableTarget;
+ * import auto.autocomparable.annotation.Order;
+ *
+ * {@code @AutoComparable}
+ * public class Boo {
+ *
+ *     {@code @AutoComparableTarget(priority = 1)}
+ *     int a;
+ *
+ *     {@code @AutoComparableTarget(priority = 2, order = Order.DESC)}
+ *     int b;
+ *
+ *     public Boo(int a, int b){
+ *         this.a = a;
+ *         this.b = b;
+ *     }
+ *
+ *     {@code @Override}
+ *     public String toString() {
+ *         return "(" + a + "," + b + ")";
+ *     }
+ * }
+ * </pre></blockquote>
+ * <p>
+ * The Sample Code 2
+ * <blockquote><pre>
+ *     ...
+ * ArrayList<Boo> booList = new ArrayList<Boo>();
+ * booList.add(new Boo(3,3));
+ * booList.add(new Boo(1,3));
+ * booList.add(new Boo(2,2));
+ * booList.add(new Boo(4,1));
+ * booList.add(new Boo(-1,6));
+ * booList.add(new Boo(3,0));
+ * System.out.print("Before Sort : ");
+ * System.out.println(booList);
+ * Collections.sort(booList);
+ * System.out.print("After  Sort : ");
+ * System.out.println(booList);
+ *     ...
+ *
+ * </pre></blockquote>
+ * <p>
+ * Expected Result of Code 2
+ * <blockquote><pre>
+ * Before Sort : [(3,3), (1,3), (2,2), (4,1), (-1,6), (3,0)]
+ * After  Sort : [(-1,6), (1,3), (2,2), (3,3), (3,0), (4,1)]
+ * </pre></blockquote>
  *
  * @author user188245
  * @see AutoComparableTarget

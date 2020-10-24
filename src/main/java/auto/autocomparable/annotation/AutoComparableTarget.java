@@ -5,9 +5,9 @@ import java.lang.annotation.*;
 /**
  * {@code AutoComparableTarget} must be located at field variable or method enclosed with the class annotated with {@link AutoComparable}
  * <p>
- * If the {@code AutoComparableTarget} variable is field variable, then the type of variable must be sortable.
+ * If the {@code AutoComparableTarget} variable is field variable, then the type of variable must be sortable. otherwise {@link auto.util.AnnotationProcessingException} will be thrown.
  * <p>
- * If the {@code AutoComparableTarget} variable is method, then it must not have any of parameters, and the return type of method also must be sortable.
+ * If the {@code AutoComparableTarget} variable is method, then it must not have any of parameters, and the return type of method also must be sortable. otherwise {@link auto.util.AnnotationProcessingException} will be thrown.
  * <p>
  * The "sortable" type must satisfy one condition at least among below 3 conditions.
  * <p>
@@ -17,12 +17,13 @@ import java.lang.annotation.*;
  * <p>
  * 3. the type is concrete class annotated with {@link AutoComparable}
  * <p>
- * {@code AutoComparableTarget} variable must define a {@code priority} which used as an order of priority.
+ * {@code AutoComparableTarget} variable must define a {@link AutoComparableTarget#priority} which used as an order of priority.
  * <p>
- * {@code AutoComparableTarget} variable define a {@code order} as a the way of order.
+ * {@code AutoComparableTarget} variable define a {@link AutoComparableTarget#order} as a the way of order.
  * <p>
- * Even though the {@code AutoComparableTarget} variable is not a sortable type, it can sortable by inputting a specific method at {@code alternativeCompareMethod} explicitly
- * that contains int return type and only 2 parameters with same type with {@code AutoComparableTarget} variable. if the method is external, then it also must be static method. generic static method is not allowed in case.
+ * Even though the {@code AutoComparableTarget} variable is not a sortable type, it can sortable by inputting a specific method at {@link AutoComparableTarget#alternativeCompareMethod} explicitly
+ * that contains int return type and only 2 parameters with same type with {@code AutoComparableTarget} variable.
+ * if the method is external, then it also must be static method. generic static method is not allowed in case. otherwise {@link auto.util.AnnotationProcessingException} will be thrown.
  *
  * @author user188245
  * @see AutoComparable
