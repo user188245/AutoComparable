@@ -23,9 +23,9 @@ class EclipseAnnotationProcessorTool extends AbstractAnnotationProcessorTool {
     private final Factory factory;
     private final LookupEnvironment lookupEnv;
 
-    private static final char[] OVERRIDE = {'O','v','e','r','r','i','d','e'};
-    private static final char[] java = {'j','a','v','a'};
-    private static final char[] lang = {'l','a','n','g'};
+    private static final char[] OVERRIDE = {'O', 'v', 'e', 'r', 'r', 'i', 'd', 'e'};
+    private static final char[] java = {'j', 'a', 'v', 'a'};
+    private static final char[] lang = {'l', 'a', 'n', 'g'};
 
     private static final int defaultPos = 0;
     private static final int defaultLineNum = 0;
@@ -39,17 +39,17 @@ class EclipseAnnotationProcessorTool extends AbstractAnnotationProcessorTool {
     @Override
     public VariableElement createVariableElement(Set<Modifier> modifiers, TypeMirror varType, String varName, TypeElement from) {
         char[] name = varName.toCharArray();
-        TypeBinding tb = getTypeBinding((TypeMirrorImpl)(varType));
+        TypeBinding tb = getTypeBinding((TypeMirrorImpl) (varType));
         long modifier = getModifierFlag(modifiers);
-        LocalVariableBinding lb = new LocalVariableBinding(name,tb,(int)modifier,false);
-        return (VariableElement)factory.newElement(lb);
+        LocalVariableBinding lb = new LocalVariableBinding(name, tb, (int) modifier, false);
+        return (VariableElement) factory.newElement(lb);
     }
 
     @Override
     public VariableElement createParameterElement(TypeMirror varType, String varName, TypeElement from) {
-        TypeBinding tb = getTypeBinding((TypeMirrorImpl)(varType));
-        LocalVariableBinding lb = new LocalVariableBinding(varName.toCharArray(),tb,0,true);
-        return (VariableElement)factory.newElement(lb);
+        TypeBinding tb = getTypeBinding((TypeMirrorImpl) (varType));
+        LocalVariableBinding lb = new LocalVariableBinding(varName.toCharArray(), tb, 0, true);
+        return (VariableElement) factory.newElement(lb);
     }
 
     @Override
@@ -60,37 +60,53 @@ class EclipseAnnotationProcessorTool extends AbstractAnnotationProcessorTool {
         String[] ss = canonicalName.split("\\.");
         token = new char[ss.length][];
         sourcePosition = new long[ss.length];
-        Arrays.fill(sourcePosition,defaultPos);
-        for(int i=0; i<ss.length; i++){
+        Arrays.fill(sourcePosition, defaultPos);
+        for (int i = 0; i < ss.length; i++) {
             token[i] = ss[i].toCharArray();
             sourcePosition[i] = 0; // put zero values without correction
         }
-        return ImportWrapper.from(new ImportReference(token,sourcePosition,false, ASTNode.Bit32));
+        return ImportWrapper.from(new ImportReference(token, sourcePosition, false, ASTNode.Bit32));
     }
 
     @Override
     public VariableWrapper createVariable(VariableElement variableElement, ExpressionWrapper init) {
         VariableElementImpl variableElementImpl = (VariableElementImpl) variableElement;
-        VariableBinding variableBinding = (VariableBinding)variableElementImpl._binding;
+        VariableBinding variableBinding = (VariableBinding) variableElementImpl._binding;
 
         LocalDeclaration localDeclaration = new LocalDeclaration(variableBinding.name, defaultPos, defaultPos);
-        localDeclaration.initialization = (Expression)init.getData();
-        localDeclaration.type = new SingleTypeReference(variableBinding.type.sourceName(),defaultPos);
+        localDeclaration.initialization = init == null ? null : (Expression) init.getData();
+        localDeclaration.type = new SingleTypeReference(variableBinding.type.sourceName(), defaultPos);
         return VariableWrapper.from(localDeclaration);
     }
 
     @Override
-    public MethodInvocationWrapper createMethodInvocation(ExpressionWrapper receiver, String selector, List<ExpressionWrapper> args){
+    public StatementWrapper createAssignment(VariableElement variableElement, ExpressionWrapper rightExpr) {
+        if (variableElement == null || rightExpr == null) {
+            throw new AnnotationProcessingException(ExceptionCode.INTERNAL_ERROR, "The Argument must not be null.");
+        }
+        VariableElementImpl variableElementImpl = (VariableElementImpl) variableElement;
+        VariableBinding variableBinding = (VariableBinding) variableElementImpl._binding;
+
+        SingleNameReference expr = new SingleNameReference(variableBinding.name, defaultPos);
+        expr.binding = variableBinding;
+
+        Assignment assignment = new Assignment(expr, (Expression) rightExpr.getData(), defaultPos);
+
+        return StatementWrapper.from(assignment);
+    }
+
+    @Override
+    public MethodInvocationWrapper createMethodInvocation(ExpressionWrapper receiver, String selector, List<ExpressionWrapper> args) {
         MessageSend ms = new MessageSend();
         Expression[] methodArgs = null;
-        if(args != null){
+        if (args != null) {
             methodArgs = new Expression[args.size()];
             int i = 0;
-            for(ExpressionWrapper ew : args){
+            for (ExpressionWrapper ew : args) {
                 methodArgs[i++] = (Expression) ew.getData();
             }
         }
-        ms.receiver = (receiver==null)?ThisReference.implicitThis():(Expression) receiver.getData();
+        ms.receiver = (receiver == null) ? ThisReference.implicitThis() : (Expression) receiver.getData();
         ms.selector = selector.toCharArray();
         ms.arguments = methodArgs;
         return MethodInvocationWrapper.from(ms);
@@ -98,15 +114,15 @@ class EclipseAnnotationProcessorTool extends AbstractAnnotationProcessorTool {
 
     @Override
     public ReturnWrapper createReturn(ExpressionWrapper expr) {
-        return ReturnWrapper.from(new ReturnStatement(expr==null?null:(Expression)expr.getData(),defaultPos,defaultPos));
+        return ReturnWrapper.from(new ReturnStatement(expr == null ? null : (Expression) expr.getData(), defaultPos, defaultPos));
     }
 
     @Override
     public IfWrapper createIf(ExpressionWrapper condExpr, StatementWrapper thenExpr, StatementWrapper elseExpr) {
         return IfWrapper.from(new IfStatement(
                 (Expression) condExpr.getData(),
-                thenExpr==null?null:(Statement) thenExpr.getData(),
-                elseExpr==null?null:(Statement)elseExpr.getData(),
+                thenExpr == null ? null : (Statement) thenExpr.getData(),
+                elseExpr == null ? null : (Statement) elseExpr.getData(),
                 defaultPos,
                 defaultPos)
         );
@@ -117,7 +133,7 @@ class EclipseAnnotationProcessorTool extends AbstractAnnotationProcessorTool {
         Expression left = (Expression) leftExpr.getData();
         Expression right = (Expression) rightExpr.getData();
         int operator = toBinaryOpcode(binaryOperator);
-        switch(binaryOperator){
+        switch (binaryOperator) {
             case EQ:
             case NE:
                 return BinaryWrapper.from(new EqualExpression(left, right, operator));
@@ -126,19 +142,19 @@ class EclipseAnnotationProcessorTool extends AbstractAnnotationProcessorTool {
             case OR:
                 return BinaryWrapper.from(new OR_OR_Expression(left, right, operator));
             case PLUS:
-                if(left instanceof BinaryExpression){
-                    return createCombinedBinaryExpressionPlus(left,right);
-                }else if(right instanceof BinaryExpression){
-                    return createCombinedBinaryExpressionPlus(right,left);
+                if (left instanceof BinaryExpression) {
+                    return createCombinedBinaryExpressionPlus(left, right);
+                } else if (right instanceof BinaryExpression) {
+                    return createCombinedBinaryExpressionPlus(right, left);
                 }
             default:
                 return BinaryWrapper.from(new BinaryExpression(left, right, operator));
         }
     }
 
-    private BinaryWrapper createCombinedBinaryExpressionPlus(Expression left, Expression right){
+    private BinaryWrapper createCombinedBinaryExpressionPlus(Expression left, Expression right) {
         int arity = 1;
-        if(left instanceof CombinedBinaryExpression){
+        if (left instanceof CombinedBinaryExpression) {
             arity += ((CombinedBinaryExpression) left).arity;
         }
         return BinaryWrapper.from(new CombinedBinaryExpression(left, right, OperatorIds.PLUS, arity));
@@ -147,44 +163,44 @@ class EclipseAnnotationProcessorTool extends AbstractAnnotationProcessorTool {
     @Override
     public MethodWrapper createMethod(List<AnnotationWrapper> annotations, Set<Modifier> modifiers, String name, TypeMirror returnType, List<VariableElement> params, List<TypeMirror> thrown, BlockWrapper block, TypeElement from) {
         int i;
-        int modifiersArg = (int)getModifierFlag(modifiers);
+        int modifiersArg = (int) getModifierFlag(modifiers);
         char[] selectorArg = name.toCharArray();
-        TypeBinding returnTypeArg = getTypeBinding((TypeMirrorImpl)returnType);
+        TypeBinding returnTypeArg = getTypeBinding((TypeMirrorImpl) returnType);
         Block b = (Block) block.getData();
 
         ReferenceBinding[] thrownArg = null;
-        if(thrown != null){
+        if (thrown != null) {
             i = 0;
             thrownArg = new ReferenceBinding[thrown.size()];
-            for(TypeMirror tm : thrown){
-                thrownArg[i++] = (ReferenceBinding) getTypeBinding((TypeMirrorImpl)(tm));
+            for (TypeMirror tm : thrown) {
+                thrownArg[i++] = (ReferenceBinding) getTypeBinding((TypeMirrorImpl) (tm));
             }
         }
 
         Argument[] newArguments = new Argument[params.size()];
         TypeBinding[] newParamTypeBinding = new TypeBinding[params.size()];
         i = 0;
-        for(VariableElement ve : params){
-            VariableBinding vb = (VariableBinding)((VariableElementImpl) ve)._binding;
+        for (VariableElement ve : params) {
+            VariableBinding vb = (VariableBinding) ((VariableElementImpl) ve)._binding;
             TypeBinding tb = vb.type;
-            TypeReference tr = new SingleTypeReference(tb.sourceName(),defaultPos);
-            Argument arg = new Argument(vb.name, defaultPos, tr,0);
+            TypeReference tr = new SingleTypeReference(tb.sourceName(), defaultPos);
+            Argument arg = new Argument(vb.name, defaultPos, tr, 0);
             newParamTypeBinding[i] = tb;
             newArguments[i++] = arg;
         }
 
-        ReferenceBinding declaringClassArg = (SourceTypeBinding)((TypeElementImpl) from)._binding;
+        ReferenceBinding declaringClassArg = (SourceTypeBinding) ((TypeElementImpl) from)._binding;
 
-        MethodBinding methodBinding = new MethodBinding(modifiersArg,selectorArg,returnTypeArg,newParamTypeBinding,thrownArg,declaringClassArg);
-        TypeReference returnTypeReference = new SingleTypeReference(methodBinding.returnType.sourceName(),defaultPos);
+        MethodBinding methodBinding = new MethodBinding(modifiersArg, selectorArg, returnTypeArg, newParamTypeBinding, thrownArg, declaringClassArg);
+        TypeReference returnTypeReference = new SingleTypeReference(methodBinding.returnType.sourceName(), defaultPos);
 
         MethodDeclaration methodDeclaration = new MethodDeclaration(null);
         Annotation[] newAnnotations = new Annotation[annotations.size()];
         i = 0;
-        for(AnnotationWrapper a : annotations){
+        for (AnnotationWrapper a : annotations) {
             Annotation annotation = (Annotation) a.getData();
             newAnnotations[i++] = annotation;
-            if(Arrays.equals(((SingleTypeReference)annotation.type).token,OVERRIDE)){
+            if (Arrays.equals(((SingleTypeReference) annotation.type).token, OVERRIDE)) {
                 // there's the way to detect the meaning of 'Override', but we do not consider it as 'implementation' but 'method overriding'
 //                methodBinding.tagBits |= ExtraCompilerModifiers.AccImplementing;
                 methodBinding.modifiers |= ExtraCompilerModifiers.AccOverriding;
@@ -192,17 +208,17 @@ class EclipseAnnotationProcessorTool extends AbstractAnnotationProcessorTool {
         }
 
         TypeReference[] thrownExceptions = null;
-        if(methodBinding.thrownExceptions.length > 0){
+        if (methodBinding.thrownExceptions.length > 0) {
             thrownExceptions = new TypeReference[methodBinding.thrownExceptions.length];
             i = 0;
-            for(ReferenceBinding rb :methodBinding.thrownExceptions){
+            for (ReferenceBinding rb : methodBinding.thrownExceptions) {
                 thrownExceptions[i++] = new SingleTypeReference(rb.sourceName, defaultPos);
             }
         }
 
         methodDeclaration.sourceStart = defaultPos;
         methodDeclaration.sourceEnd = defaultPos;
-        methodDeclaration.scope = new MethodScope(null,methodDeclaration,false);
+        methodDeclaration.scope = new MethodScope(null, methodDeclaration, false);
         methodDeclaration.binding = methodBinding;
         methodDeclaration.modifiers = methodBinding.modifiers;
         methodDeclaration.selector = methodBinding.selector;
@@ -219,7 +235,7 @@ class EclipseAnnotationProcessorTool extends AbstractAnnotationProcessorTool {
         Block block = new Block(statements.size());
         Statement[] sts = new Statement[statements.size()];
         int i = 0;
-        for(StatementWrapper statementWrapper : statements){
+        for (StatementWrapper statementWrapper : statements) {
             sts[i++] = (Statement) statementWrapper.getData();
         }
         block.statements = sts;
@@ -230,31 +246,31 @@ class EclipseAnnotationProcessorTool extends AbstractAnnotationProcessorTool {
     public ExpressionWrapper createMemberSelect(String fullPath) {
         String[] stringSplitAsDelimiter = fullPath.split("\\.");
         Reference receiver = createSingleNameReference(stringSplitAsDelimiter[0]);
-        if(stringSplitAsDelimiter.length == 1){
+        if (stringSplitAsDelimiter.length == 1) {
             return ExpressionWrapper.from(receiver);
         }
-        if(receiver instanceof ThisReference){
-            for(int i=1; i<stringSplitAsDelimiter.length; i++){
-                FieldReference newReceiver = new FieldReference(stringSplitAsDelimiter[i].toCharArray(),defaultPos);
+        if (receiver instanceof ThisReference) {
+            for (int i = 1; i < stringSplitAsDelimiter.length; i++) {
+                FieldReference newReceiver = new FieldReference(stringSplitAsDelimiter[i].toCharArray(), defaultPos);
                 newReceiver.receiver = receiver;
                 receiver = newReceiver;
             }
-        }else{
+        } else {
             char[][] tokens = new char[stringSplitAsDelimiter.length][];
             long[] pos = new long[stringSplitAsDelimiter.length];
-            for(int i=0; i<tokens.length; i++){
+            for (int i = 0; i < tokens.length; i++) {
                 tokens[i] = stringSplitAsDelimiter[i].toCharArray();
                 pos[i] = defaultPos;
             }
-            receiver = new QualifiedNameReference(tokens,pos,defaultPos,defaultPos);
+            receiver = new QualifiedNameReference(tokens, pos, defaultPos, defaultPos);
         }
         return ExpressionWrapper.from(receiver);
     }
 
-    private Reference createSingleNameReference(String str){
-        if(str.equals("this")){
+    private Reference createSingleNameReference(String str) {
+        if (str.equals("this")) {
             return new ThisReference(defaultPos, defaultPos);
-        }else if(str.equals("super")){
+        } else if (str.equals("super")) {
             return new SuperReference(defaultPos, defaultPos);
         }
         return new SingleNameReference(str.toCharArray(), defaultPos);
@@ -263,7 +279,7 @@ class EclipseAnnotationProcessorTool extends AbstractAnnotationProcessorTool {
     @Override
     public ExpressionWrapper createMemberSelect(ExpressionWrapper start, String fullPath) {
         Expression expr = (Expression) start.getData();
-        if(expr instanceof Reference){
+        if (expr instanceof Reference) {
             return createMemberSelect(String.valueOf(expr.printExpression(0, new StringBuffer()).append('.').append(fullPath)));
         }
         throw new AnnotationProcessingException(ExceptionCode.INTERNAL_ERROR, "The expression of member select tree has illegal type.");
@@ -271,63 +287,63 @@ class EclipseAnnotationProcessorTool extends AbstractAnnotationProcessorTool {
 
     @Override
     public LiteralWrapper createLiteral(Object obj) {
-        if(obj == null){
-            return LiteralWrapper.from(new NullLiteral(defaultPos,defaultPos));
+        if (obj == null) {
+            return LiteralWrapper.from(new NullLiteral(defaultPos, defaultPos));
         }
         char[] name = obj.toString().toCharArray();
-        if(obj instanceof CharSequence){
-            return LiteralWrapper.from(new StringLiteral(name,defaultPos,defaultPos,defaultLineNum));
+        if (obj instanceof CharSequence) {
+            return LiteralWrapper.from(new StringLiteral(name, defaultPos, defaultPos, defaultLineNum));
         }
-        if(obj instanceof Boolean){
-            if((Boolean) obj){
-                return LiteralWrapper.from(new TrueLiteral(defaultPos,defaultPos));
-            }else{
-                return LiteralWrapper.from(new FalseLiteral(defaultPos,defaultPos));
+        if (obj instanceof Boolean) {
+            if ((Boolean) obj) {
+                return LiteralWrapper.from(new TrueLiteral(defaultPos, defaultPos));
+            } else {
+                return LiteralWrapper.from(new FalseLiteral(defaultPos, defaultPos));
             }
         }
-        if(obj instanceof Double){
-            return LiteralWrapper.from(new DoubleLiteral(name,defaultPos,defaultPos));
+        if (obj instanceof Double) {
+            return LiteralWrapper.from(new DoubleLiteral(name, defaultPos, defaultPos));
         }
-        if(obj instanceof Float){
-            return LiteralWrapper.from(new FloatLiteral(name,defaultPos,defaultPos));
+        if (obj instanceof Float) {
+            return LiteralWrapper.from(new FloatLiteral(name, defaultPos, defaultPos));
         }
-        if(obj instanceof Long){
-            return LiteralWrapper.from(LongLiteral.buildLongLiteral(name,defaultPos,defaultPos));
+        if (obj instanceof Long) {
+            return LiteralWrapper.from(LongLiteral.buildLongLiteral(name, defaultPos, defaultPos));
         }
-        if(obj instanceof Integer || obj instanceof Byte || obj instanceof Character || obj instanceof Short){
-            return LiteralWrapper.from(IntLiteral.buildIntLiteral(name,defaultPos,defaultPos));
+        if (obj instanceof Integer || obj instanceof Byte || obj instanceof Character || obj instanceof Short) {
+            return LiteralWrapper.from(IntLiteral.buildIntLiteral(name, defaultPos, defaultPos));
         }
         throw new AnnotationProcessingException(ExceptionCode.INTERNAL_ERROR, "The Argument must belong to primitive type or String");
     }
 
     @Override
     public AnnotationWrapper createOverrideAnnotation() {
-        Annotation override = new MarkerAnnotation(new SingleTypeReference(OVERRIDE,defaultPos),defaultPos);
+        Annotation override = new MarkerAnnotation(new SingleTypeReference(OVERRIDE, defaultPos), defaultPos);
         return AnnotationWrapper.from(override);
     }
 
     @Override
     public ClassWrapper injectImport(CompilationUnitWrapper compilationUnitWrapper, ImportWrapper importWrapper) {
-        CompilationUnitDeclaration cud = (CompilationUnitDeclaration)compilationUnitWrapper.getData();
-        ImportReference importReference = (ImportReference)importWrapper.getData();
-        if(isJavaLangClassToken(importReference.tokens)){
+        CompilationUnitDeclaration cud = (CompilationUnitDeclaration) compilationUnitWrapper.getData();
+        ImportReference importReference = (ImportReference) importWrapper.getData();
+        if (isJavaLangClassToken(importReference.tokens)) {
             return extractClass(compilationUnitWrapper);
         }
         Arrays.fill(importReference.sourcePositions, cud.sourceStart);
-        if(cud.imports != null){
-            ImportReference[] newImports = new ImportReference[cud.imports.length+1];
-            System.arraycopy(cud.imports,0,newImports,0,cud.imports.length);
-            newImports[newImports.length-1] = importReference;
+        if (cud.imports != null) {
+            ImportReference[] newImports = new ImportReference[cud.imports.length + 1];
+            System.arraycopy(cud.imports, 0, newImports, 0, cud.imports.length);
+            newImports[newImports.length - 1] = importReference;
             cud.imports = null;
             cud.imports = newImports;
-        }else{
+        } else {
             cud.imports = new ImportReference[]{importReference};
         }
         return extractClass(compilationUnitWrapper);
     }
 
     private boolean isJavaLangClassToken(char[][] tokens) {
-        return tokens.length == 3 && Arrays.equals(tokens[0],EclipseAnnotationProcessorTool.java) && Arrays.equals(tokens[1],EclipseAnnotationProcessorTool.lang);
+        return tokens.length == 3 && Arrays.equals(tokens[0], EclipseAnnotationProcessorTool.java) && Arrays.equals(tokens[1], EclipseAnnotationProcessorTool.lang);
     }
 
     @Override
@@ -337,72 +353,72 @@ class EclipseAnnotationProcessorTool extends AbstractAnnotationProcessorTool {
 
     @Override
     public void injectInterface(ClassWrapper classWrapper, TypeElement infType, List<TypeElement> genericTypes) {
-        TypeDeclaration typeDeclaration = (TypeDeclaration)classWrapper.getData();
-        TypeReference inf = createInterface((TypeElementImpl)infType,genericTypes);
-        injectInterface(typeDeclaration,inf);
+        TypeDeclaration typeDeclaration = (TypeDeclaration) classWrapper.getData();
+        TypeReference inf = createInterface((TypeElementImpl) infType, genericTypes);
+        injectInterface(typeDeclaration, inf);
     }
 
-    private void injectInterface(TypeDeclaration td, TypeReference inf){
-        if(td.superInterfaces != null){
-            TypeReference[] newInterfaces = new TypeReference[td.superInterfaces.length+1];
+    private void injectInterface(TypeDeclaration td, TypeReference inf) {
+        if (td.superInterfaces != null) {
+            TypeReference[] newInterfaces = new TypeReference[td.superInterfaces.length + 1];
             System.arraycopy(td.superInterfaces, 0, newInterfaces, 0, td.superInterfaces.length);
-            newInterfaces[newInterfaces.length-1] = inf;
+            newInterfaces[newInterfaces.length - 1] = inf;
             td.superInterfaces = null;
             td.superInterfaces = newInterfaces;
-        }else{
+        } else {
             td.superInterfaces = new TypeReference[]{inf};
         }
         SourceTypeBinding sourceTypeBinding = td.binding;
-        if(sourceTypeBinding.superInterfaces != null){
-            ReferenceBinding[] newInterfaceBindings = new ReferenceBinding[sourceTypeBinding.superInterfaces.length+1];
+        if (sourceTypeBinding.superInterfaces != null) {
+            ReferenceBinding[] newInterfaceBindings = new ReferenceBinding[sourceTypeBinding.superInterfaces.length + 1];
             System.arraycopy(sourceTypeBinding.superInterfaces, 0, newInterfaceBindings, 0, sourceTypeBinding.superInterfaces.length);
-            newInterfaceBindings[newInterfaceBindings.length-1] = (ReferenceBinding) inf.resolvedType;
+            newInterfaceBindings[newInterfaceBindings.length - 1] = (ReferenceBinding) inf.resolvedType;
             sourceTypeBinding.setSuperInterfaces(newInterfaceBindings);
-        }else{
+        } else {
             sourceTypeBinding.setSuperInterfaces(new ReferenceBinding[]{(ReferenceBinding) inf.resolvedType});
         }
     }
 
-    private TypeReference createInterface(TypeElementImpl infType, List<TypeElement> genericTypes){
-        if(genericTypes != null && !genericTypes.isEmpty()){
+    private TypeReference createInterface(TypeElementImpl infType, List<TypeElement> genericTypes) {
+        if (genericTypes != null && !genericTypes.isEmpty()) {
             char[] name = getName(infType);
             TypeReference[] typeReferences = new TypeReference[genericTypes.size()];
             TypeBinding[] typeBindings = new TypeBinding[genericTypes.size()];
             int i = 0;
-            for(TypeElement te : genericTypes){
+            for (TypeElement te : genericTypes) {
                 typeReferences[i] = createInterface((TypeElementImpl) te);
                 typeBindings[i] = typeReferences[i].resolvedType;
                 i++;
             }
-            ParameterizedSingleTypeReference pstr = new ParameterizedSingleTypeReference(name,typeReferences, 0, defaultPos);
-            pstr.resolvedType = lookupEnv.createParameterizedType((ReferenceBinding)infType._binding,typeBindings,null);
+            ParameterizedSingleTypeReference pstr = new ParameterizedSingleTypeReference(name, typeReferences, 0, defaultPos);
+            pstr.resolvedType = lookupEnv.createParameterizedType((ReferenceBinding) infType._binding, typeBindings, null);
             return pstr;
         }
         return createInterface(infType);
     }
 
-    private TypeReference createInterface(TypeElementImpl infType){
+    private TypeReference createInterface(TypeElementImpl infType) {
         char[] name = getName(infType);
-        SingleTypeReference str = new SingleTypeReference(name,defaultPos);
-        str.resolvedType = (TypeBinding)infType._binding;
+        SingleTypeReference str = new SingleTypeReference(name, defaultPos);
+        str.resolvedType = (TypeBinding) infType._binding;
         return str;
     }
 
-    private SourceTypeBinding getSourceTypeBindingFromTypeElement(TypeElementImpl typeElement){
+    private SourceTypeBinding getSourceTypeBindingFromTypeElement(TypeElementImpl typeElement) {
         return (SourceTypeBinding) typeElement._binding;
     }
 
-    private char[] getName(TypeElement e){
+    private char[] getName(TypeElement e) {
         return e.getQualifiedName().toString().toCharArray();
     }
 
-    private long getModifierFlag(Set<Modifier> modifiers){
+    private long getModifierFlag(Set<Modifier> modifiers) {
         long result = 0;
-        if(modifiers == null){
+        if (modifiers == null) {
             return result;
         }
-        for(Modifier m : modifiers){
-            switch(m){
+        for (Modifier m : modifiers) {
+            switch (m) {
                 case ABSTRACT:
                     result |= ClassFileConstants.AccAbstract;
                     break;
@@ -441,8 +457,8 @@ class EclipseAnnotationProcessorTool extends AbstractAnnotationProcessorTool {
         return result;
     }
 
-    private int toBinaryOpcode(BinaryOperator binaryOperator){
-        switch(binaryOperator){
+    private int toBinaryOpcode(BinaryOperator binaryOperator) {
+        switch (binaryOperator) {
             case EQ:
                 return OperatorIds.EQUAL_EQUAL;
             case GE:
@@ -486,8 +502,8 @@ class EclipseAnnotationProcessorTool extends AbstractAnnotationProcessorTool {
         }
     }
 
-    private TypeBinding getTypeBinding(TypeMirrorImpl typeMirror){
-        switch(typeMirror.getKind()){
+    private TypeBinding getTypeBinding(TypeMirrorImpl typeMirror) {
+        switch (typeMirror.getKind()) {
             case SHORT:
                 return TypeBinding.SHORT;
             case INT:
@@ -510,7 +526,7 @@ class EclipseAnnotationProcessorTool extends AbstractAnnotationProcessorTool {
                 return TypeBinding.NULL;
             case DECLARED:
             case TYPEVAR:
-                return (TypeBinding)((ElementImpl)asElement(typeMirror))._binding;
+                return (TypeBinding) ((ElementImpl) asElement(typeMirror))._binding;
             default:
                 throw new AnnotationProcessingException(ExceptionCode.INTERNAL_ERROR, "Can't convert the type into binding.");
         }
@@ -518,36 +534,36 @@ class EclipseAnnotationProcessorTool extends AbstractAnnotationProcessorTool {
 
     @Override
     public void injectMethod(ClassWrapper classWrapper, MethodWrapper methodWrapper) {
-        TypeDeclaration cls = (TypeDeclaration)classWrapper.getData();
-        AbstractMethodDeclaration method = (AbstractMethodDeclaration)methodWrapper.getData();
+        TypeDeclaration cls = (TypeDeclaration) classWrapper.getData();
+        AbstractMethodDeclaration method = (AbstractMethodDeclaration) methodWrapper.getData();
         method.compilationResult = cls.compilationResult;
         method.scope.parent = cls.scope;
         method.sourceStart = cls.sourceStart;
         method.sourceEnd = method.sourceStart;
-        if(cls.methods != null){
-            AbstractMethodDeclaration[] newMethods = new AbstractMethodDeclaration[cls.methods.length+1];
-            System.arraycopy(cls.methods,0,newMethods,0,cls.methods.length);
-            newMethods[newMethods.length-1] = method;
+        if (cls.methods != null) {
+            AbstractMethodDeclaration[] newMethods = new AbstractMethodDeclaration[cls.methods.length + 1];
+            System.arraycopy(cls.methods, 0, newMethods, 0, cls.methods.length);
+            newMethods[newMethods.length - 1] = method;
             cls.methods = null;
             cls.methods = newMethods;
-        }else{
+        } else {
             cls.methods = new AbstractMethodDeclaration[]{method};
         }
         SourceTypeBinding stb = cls.binding;
         MethodBinding[] oldMethodBindings = stb.methods();
-        if(oldMethodBindings != null){
-            MethodBinding[] newMethodBindings = new MethodBinding[oldMethodBindings.length+1];
-            System.arraycopy(oldMethodBindings,0,newMethodBindings,0,oldMethodBindings.length);
-            newMethodBindings[newMethodBindings.length-1] = method.binding;
+        if (oldMethodBindings != null) {
+            MethodBinding[] newMethodBindings = new MethodBinding[oldMethodBindings.length + 1];
+            System.arraycopy(oldMethodBindings, 0, newMethodBindings, 0, oldMethodBindings.length);
+            newMethodBindings[newMethodBindings.length - 1] = method.binding;
             stb.setMethods(newMethodBindings);
-        }else{
+        } else {
             stb.setMethods(new MethodBinding[]{method.binding});
         }
     }
 
     @Override
     public ClassWrapper extractClass(CompilationUnitWrapper compilationUnitWrapper) {
-        TypeDeclaration[] types = ((CompilationUnitDeclaration)compilationUnitWrapper.getData()).types;
+        TypeDeclaration[] types = ((CompilationUnitDeclaration) compilationUnitWrapper.getData()).types;
         return ClassWrapper.from(types[0]);
     }
 
@@ -558,7 +574,7 @@ class EclipseAnnotationProcessorTool extends AbstractAnnotationProcessorTool {
 
     @Override
     public TypeElement extractTypeElement(ClassWrapper classWrapper) {
-        TypeDeclaration td = (TypeDeclaration)classWrapper.getData();
-        return (TypeElement)factory.newElement(td.binding);
+        TypeDeclaration td = (TypeDeclaration) classWrapper.getData();
+        return (TypeElement) factory.newElement(td.binding);
     }
 }
