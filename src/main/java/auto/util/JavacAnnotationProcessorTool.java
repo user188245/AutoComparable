@@ -366,7 +366,9 @@ class JavacAnnotationProcessorTool extends AbstractAnnotationProcessorTool {
             jcImport.pos = jcCompilationUnit.pos;
             defsTmp.addFirst(jcImport);
         }
-        defsTmp.addFirst(packageDecl);
+        if(packageDecl != null){
+            defsTmp.addFirst(packageDecl);
+        }
         defsTmp.addLast(jcClassDecl);
         com.sun.tools.javac.util.List<JCTree> defs = com.sun.tools.javac.util.List.from(defsTmp);
         jcCompilationUnit.defs = null;
