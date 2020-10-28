@@ -3,7 +3,7 @@ package auto.autocomparable.annotation;
 import java.lang.annotation.*;
 
 /**
- * {@code @AutoComparable} make an annotated class automatically implemented
+ * {@code @AutoComparable} makes an annotated class automatically implemented
  * Comparable interface containing self class as a the generic argument
  * through the {@link auto.autocomparable.annotation.processing.AutoComparableProcessor}
  * <p>

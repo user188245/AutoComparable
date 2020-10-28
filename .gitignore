@@ -39,3 +39,7 @@ hs_err_pid*
 /out/
 /.gradle/
 /build/
+
+### gradle ###
+*.gradle
+

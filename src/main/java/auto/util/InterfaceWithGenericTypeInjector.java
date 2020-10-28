@@ -20,7 +20,7 @@ public abstract class InterfaceWithGenericTypeInjector extends InterfaceInjector
 
     /**
      * @param inf                     the interface
-     * @param genericTypes            the generic type defined at the interface
+     * @param genericTypes            the list of generic type defined at the interface, a null element will be recognized as 'Self-Type Class'
      * @param annotationProcessorTool the annotation processor tool which depends on specific compiler.
      * @throws AnnotationProcessingException throw if generic is incorrect with the type parameters of interface or arguments is invalid.
      */
