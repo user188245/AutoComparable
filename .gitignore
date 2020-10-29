@@ -37,9 +37,14 @@ hs_err_pid*
 *.iml
 *.ipr
 /out/
-/.gradle/
 /build/
+/bin
+
+
 
 ### gradle ###
+gradlew
+/.gradle/
+/gradle/
 *.gradle
-
+*.bat
